@@ -2,7 +2,7 @@
 
 ## Overview
 
-**New Birds** is a web application that helps birders discover bird species they haven't seen yet by surfacing recent nearby sightings. By connecting to a user's eBird account, the app compares their life list against local sightings to highlight new birding opportunities.
+**New Birds** is a web application that helps birders discover bird species they haven't seen yet by surfacing recent nearby sightings. Users import their eBird life list via CSV, and the app compares it against local sightings to highlight new birding opportunities.
 
 ---
 
@@ -32,70 +32,84 @@ Birders maintaining life lists often miss opportunities to spot new species beca
 
 ## Core Features (MVP)
 
-### 1. Logged-Out Mode
+### 1. All Users
 
-Visitors who have not connected an eBird account see a curated landing experience designed to showcase the app's value and encourage sign-up.
+Features in this section are shared between logged-out visitors and logged-in users.
 
-#### Birds for You (Logged-Out)
+#### Birds for You
 
-A short list (up to 10 species) of relatively rare birds recently sighted near the visitor's location. Location is determined via browser geolocation (with a prompt).
+A paginated list (20 per page, "Show more" button) of relatively rare birds recently sighted near the user's location. Location is determined via browser geolocation (with a prompt) or by ZIP code.
+
+**Controls**:
+- **ZIP code**: Text input to set location by ZIP code
+- **Sort**: Score (default), Distance, Date, Alphabetical
+- **Lookback**: 1 day, 3 days, 7 days (max)
 
 **Scoring**: See [Rarity Scoring](#rarity-scoring) below.
 
-**Species Entry Display (Logged-Out)**:
-| Field | Description |
-|-------|-------------|
-| Species name | Common name, linked to eBird species page |
-| Scientific name | Displayed in italics below common name |
-| Reason | One or more tags explaining why this bird is notable (see [Rarity Scoring](#rarity-scoring)) |
-| Users spotting | Number of unique users who spotted this species in the given timeframe |
-| Last spotted | Most recent sighting date |
-| Location hint | General area (e.g., "Lake Merritt, Oakland") |
-| Distance | Miles from visitor's location (e.g., "12 mi away") |
-| Checklist link | Link to the most recent eBird checklist containing this species |
+**Species Entry Display** (one card per species, top to bottom):
 
-#### Call to Action
+| Line | Content |
+|------|---------|
+| Name | Common name (linked to eBird species page) followed by scientific name in italics in parentheses — e.g., `Varied Thrush (Ixoreus naevius)` |
+| Tags | One or more reason tags explaining why this bird is notable (see [Rarity Scoring](#rarity-scoring)). Omitted if no tags. |
+| Photos | Up to 3 thumbnails sourced from the checklists referenced by this entry. Each thumbnail links to its originating checklist. Omitted if no photos. |
+| Stats | `Last spotted: [date] ([distance] mi away, [location])` — e.g., `Last spotted: Today (8 mi away, Tilden Regional Park)` |
+| Your sightings | `You spotted: never`, `You spotted: 1 time`, or `You spotted: [N] times` — logged-in users only |
+| CTA | "Show recent sightings" link that expands the Species Detail section inline |
 
+**Species Detail** (inline, below the card entry, loaded on demand):
+
+A loading skeleton is shown while data is fetched. Once loaded, the detail section displays:
+
+| Element | Content |
+|---------|---------|
+| Sighting count | `[N] sighting[s] nearby in the last [N] day[s]` — count of unique recent observation entries from the eBird per-species endpoint |
+| Checklists | All recent nearby checklists for this species, listed as: `[location name] · [relative date] · [X] mi away [📷 (N)]` — each location name links to the eBird checklist. If photos of this species were submitted with the checklist, a camera icon and count `📷 (N)` appear at the end, also linking to the checklist. Count is per-species (from `mediaCounts.P` in the eBird checklist view API). Omitted when no photos. |
+
+"Hide" collapses the section.
+
+### 2. Logged-Out Mode
+
+Visitors who have not signed in see a curated landing experience designed to showcase the app's value and encourage sign-up.
+
+The logged-out landing page displays the Birds for You list (see [All Users](#1-all-users)) alongside CTAs to sign up.
+
+**Call to Action**:
 - Prominent CTA: "Sign up to import your life list and see which of these you haven't spotted yet"
 - Secondary CTA: "See your full life list and discover new birds nearby"
 - CTA appears at the top and bottom of the Birds for You list
 
-### 2. Authentication
+### 3. Authentication
 
 - **Magic link (email-only)**: Passwordless auth via email. No passwords to manage.
 - **No eBird OAuth**: The eBird API does not support OAuth. User authentication is independent of eBird.
 - Life list data is imported via CSV upload (see below).
 
-### 3. User Profile Settings Screen
+### 4. Logged-In Mode
 
-#### Life List Import
-- **CSV upload**: User downloads their life list from [ebird.org/lifelist](https://ebird.org/lifelist) ("Download CSV") or full observation history from [ebird.org/downloadMyData](https://ebird.org/downloadMyData), then uploads the CSV to New Birds
-- Display import status: last imported date, total species count
-- "Re-import" button to upload a newer CSV and refresh the life list
-- Link to eBird download page with brief instructions
+#### Birds for You (Logged-In)
 
-#### Location Settings
-- **Browser geolocation**: One-click "Use My Location" with permission prompt
-- **Manual address entry**: Text input with address autocomplete
-- Display current saved location on a mini-map
-- **Search radius**: Slider input (range: 1–100 miles, default: 25 miles)
+Logged-in users see the same Birds for You list as logged-out users (see [All Users](#1-all-users)), with one addition: species not on the user's life list are tagged as **"Lifer"** and receive the highest rarity score weight. The display also shows how many times the logged-in user has personally observed each species.
 
-### 4. User's Birding Life List Screen
+**Additional Species Entry Lines (Logged-In)**:
+| Line | Content |
+|------|---------|
+| Lifer tag | "Lifer" reason tag added to the tags line if species is not on the user's life list |
+| Your sightings | `You spotted: never`, `You spotted: 1 time`, or `You spotted: [N] times` — displayed between the stats line and the "Show details" CTA |
 
-Two tabs within this screen:
+#### Life List Screen
 
-#### Tab A: "My Life List"
+Two tabs:
 
-Displays all bird species the user has observed in their lifetime, sourced from their eBird account.
+##### Tab A: "My Life List"
 
-**Data Source**: `https://ebird.org/lifelist?time=life&r=world`
+Displays all bird species the user has observed in their lifetime, sourced from their uploaded CSV.
 
-**Display Controls** (mirror eBird's interface):
-- **View mode**: List view / Grid view
-- **Sort options**:
-  - Taxonomic order (default)
-  - Date (newest first / oldest first)
-  - Alphabetical (A–Z / Z–A)
+**Data Source**: User-uploaded CSV from `https://ebird.org/lifelist?time=life&r=world`
+
+**Display Controls**:
+- **Sort options**: Taxonomic order (default), Date newest/oldest, Alphabetical A–Z / Z–A
 - **Search/filter**: Text search by species name
 - **Total count**: Display total species count prominently
 
@@ -106,55 +120,45 @@ Displays all bird species the user has observed in their lifetime, sourced from 
 - Location last observed (most recent observation)
 - Link to species page on eBird
 
-#### Tab B: "Birds for You"
+##### Tab B: "Birds for You"
 
-Recommends birds worth traveling to observe, spotted within the user's configured radius in the last 30 days. This view appears virtually identical to the logged-out "Birds for You" list, with additional logged-in-only fields.
+Same as the logged-out Birds for You (see [All Users](#1-all-users)), with the Lifer additions described above.
 
-**Purpose**: Help users discover birds that are interesting, rare, or new to them.
+**Empty State**: "No recommended birds nearby in the last 7 days. Try expanding your search radius!"
 
-**Scoring**: See [Rarity Scoring](#rarity-scoring) below.
+#### User Profile Settings
 
-**Display Controls**:
-- **Sort options**:
-  - Distance (nearest first) — default
-  - Last spotted (most recent first)
-  - Alphabetical (A–Z)
-- **Filter by**: Date range (last 7 days, 14 days, 30 days)
+##### Life List Import
+- **CSV upload**: User downloads their life list from [ebird.org/lifelist?time=life&r=world](https://ebird.org/lifelist?time=life&r=world) ("Download CSV") or full observation history from [ebird.org/downloadMyData](https://ebird.org/downloadMyData), then uploads to New Birds
+- Both eBird CSV formats supported (Life List export and My Data export)
+- Display import status: species count, upload confirmation message
+- Link to eBird download page
 
-**Species Entry Display (Logged-In)**:
-| Field | Description |
-|-------|-------------|
-| Species name | Common name, linked to eBird species page |
-| Scientific name | Displayed in italics below common name |
-| Reason | One or more tags explaining why this bird is recommended. Includes rarity reasons (see [Rarity Scoring](#rarity-scoring)) and, for species not on the user's life list, a "Lifer" tag |
-| Times you spotted | Number of times the logged-in user has observed this species (0 for lifers) |
-| Users spotting | Number of unique users who spotted this species in the given timeframe |
-| Last spotted | Most recent sighting date |
-| Location hint | General area (e.g., "Lake Merritt, Oakland") |
-| Distance | Miles from user's location (e.g., "12 mi away") |
-| Checklist link | Link to the most recent eBird checklist containing this species |
-
-**Empty State**: "No recommended birds nearby in the last 30 days. Try expanding your search radius!"
+##### Location Settings
+- **Browser geolocation**: One-click "Use My Location" with permission prompt
+- **ZIP code lookup**: Enter a US ZIP code to set location
+- **Manual coordinates**: Latitude and longitude text inputs
+- Display current saved coordinates
+- **Search radius**: Slider input (range: 1–25 miles, default: 10 miles)
 
 ---
 
 ## Rarity Scoring
 
-Used by both the logged-out "Birds for You" and the logged-in "Birds for You" tab. A species is considered "relatively rare" based on a weighted combination of three signals, with extra weight given to the eBird rarity score:
+Used by both the logged-out and logged-in Birds for You. A species is scored by a weighted combination of signals:
 
 | Signal | Weight | Description |
 |--------|--------|-------------|
-| Lifer | Highest (logged-in only) | Species not on the user's life list — the most valuable recommendation |
-| eBird rarity score | High | Species with low regional frequency scores in eBird's abundance data |
-| Seasonal rarity | Medium | Species that are uncommon for the current season in the region (out-of-range vagrants, early/late migrants) |
-| Low checklist frequency | Medium | Species appearing on a small percentage of recent local checklists (last 30 days) |
+| Lifer | 1000 (logged-in only) | Species not on the user's life list — the most valuable recommendation |
+| Notable (eBird rarity) | 500 | Species flagged as rare by eBird's regional rarity system |
+| Checklist notes | 150 | Species with observer-written descriptions or notes on the checklist (indicates likely rare/confirmed sighting) |
 
-Each species entry displays one or more **reason tags** explaining why it was included:
+Signals stack — a species can score across multiple signals simultaneously. Results are sorted highest score first.
+
+Each species entry displays one or more **reason tags**:
 - **"Lifer"** (logged-in only) — species is not on the user's life list
-- "Rare in this region" (eBird rarity score)
-- "Unusual for February" (seasonal rarity)
-- "Spotted on <2% of local checklists" (low checklist frequency)
-- Multiple tags may appear if more than one signal applies
+- **"Rare in this region"** — species flagged as notable by eBird
+- **"Checklist notes added"** — observer wrote a description or notes for this species observation
 
 ---
 
@@ -183,40 +187,42 @@ Each species entry displays one or more **reason tags** explaining why it was in
 ├─────────────────────────────────────────┤
 │                                         │
 │  ┌─────────────────────────────────┐    │
-│  │ Connect your eBird account to   │    │
-│  │ see which birds near you are    │    │
-│  │ missing from your life list.    │    │
+│  │ Sign in to see which birds near │    │
+│  │ you are missing from your list. │    │
 │  │                                 │    │
-│  │ [Sign up with email →]       │    │
+│  │ [Sign up with email →]          │    │
 │  └─────────────────────────────────┘    │
 │                                         │
 │  BIRDS FOR YOU                          │
-│  📍 Oakland, CA                         │
-│  ┌─────────────────────────────────┐    │
-│  │ Varied Thrush                   │    │
-│  │ Ixoreus naevius                 │    │
-│  │ 🏷 Rare in this region          │    │
-│  │ 🏷 Unusual for February         │    │
-│  │ 5 users spotting                │    │
-│  │ Last spotted: Today • 8 mi     │    │
-│  │ 📍 Tilden Regional Park         │    │
-│  │ [View Checklist →]              │    │
-│  └─────────────────────────────────┘    │
-│  ┌─────────────────────────────────┐    │
-│  │ Lewis's Woodpecker              │    │
-│  │ Melanerpes lewis                │    │
-│  │ 🏷 <2% of local checklists     │    │
-│  │ 2 users spotting                │    │
-│  │ Last spotted: 2 days ago • 22mi│    │
-│  │ 📍 Briones Regional Park        │    │
-│  │ [View Checklist →]              │    │
-│  └─────────────────────────────────┘    │
-│  ...                                    │
+│  📍 Oakland, CA  Sort: [Score ▼] [7d ▼] │
 │                                         │
 │  ┌─────────────────────────────────┐    │
-│  │ See your full life list and     │    │
-│  │ discover new birds nearby.      │    │
-│  │ [Sign up with email →]         │    │
+│  │ Varied Thrush (Ixoreus naevius) │    │
+│  │ 🏷 Rare in this region          │    │
+│  │ [photo] [photo]                 │    │
+│  │ Last spotted: Today             │    │
+│  │   (8 mi away, Tilden RP)        │    │
+│  │ Show recent sightings           │    │
+│  └─────────────────────────────────┘    │
+│  ┌─────────────────────────────────┐    │
+│  │ Varied Thrush (Ixoreus naevius) │    │
+│  │ 🏷 Rare in this region          │    │
+│  │ [photo] [photo]                 │    │
+│  │ Last spotted: Today             │    │
+│  │   (8 mi away, Tilden RP)        │    │
+│  │ Hide                            │    │
+│  ├─────────────────────────────────┤    │
+│  │ 5 sightings nearby in the last  │    │
+│  │   7 days                        │    │
+│  │ Tilden RP · Today · 8 mi 📷(2)  │    │
+│  │ Briones RP · Today · 12 mi away │    │
+│  │ Lake Chabot · Yesterday · 6 mi  │    │
+│  └─────────────────────────────────┘    │
+│  ...                                    │
+│  [Show more (12 remaining)]             │
+│                                         │
+│  ┌─────────────────────────────────┐    │
+│  │ [Sign up with email →]          │    │
 │  └─────────────────────────────────┘    │
 │                                         │
 └─────────────────────────────────────────┘
@@ -232,18 +238,22 @@ Each species entry displays one or more **reason tags** explaining why it was in
 │  LIFE LIST                              │
 │  ┌─────────────────────────────────┐    │
 │  │ 342 species imported            │    │
-│  │ Last imported: Feb 15, 2026     │    │
 │  │                                 │    │
-│  │ [Upload new CSV]                │    │
-│  │ [Download from eBird ↗]         │    │
+│  │ [Upload CSV]                    │    │
+│  │ Download from eBird ↗           │    │
 │  └─────────────────────────────────┘    │
 │                                         │
 │  LOCATION                               │
 │  ┌─────────────────────────────────┐    │
-│  │ 📍 Oakland, CA                  │    │
-│  │ [Use My Location] [Enter Address]│   │
+│  │ Current: 37.8044, -122.2712     │    │
+│  │ [Use My Location]               │    │
 │  │                                 │    │
-│  │ Search Radius: [==●======] 25mi │    │
+│  │ ZIP Code: [94607] [Set]         │    │
+│  │                                 │    │
+│  │ Latitude: [37.8044]             │    │
+│  │ Longitude: [-122.2712]  [Set]   │    │
+│  │                                 │    │
+│  │ Search Radius: [===●=====] 10mi │    │
 │  └─────────────────────────────────┘    │
 │                                         │
 └─────────────────────────────────────────┘
@@ -266,17 +276,11 @@ Each species entry displays one or more **reason tags** explaining why it was in
 │  │ Last seen: Feb 10, 2026         │    │
 │  │ 📍 Central Park, NY             │    │
 │  └─────────────────────────────────┘    │
-│  ┌─────────────────────────────────┐    │
-│  │ Northern Cardinal               │    │
-│  │ Cardinalis cardinalis           │    │
-│  │ Last seen: Jan 28, 2026         │    │
-│  │ 📍 Prospect Park, NY            │    │
-│  └─────────────────────────────────┘    │
 │  ...                                    │
 └─────────────────────────────────────────┘
 ```
 
-### Screen: Birds for You (Tab B)
+### Screen: Birds for You (Tab B, Logged-In)
 
 ```
 ┌─────────────────────────────────────────┐
@@ -284,38 +288,29 @@ Each species entry displays one or more **reason tags** explaining why it was in
 ├─────────────────────────────────────────┤
 │  [My Life List]  [Birds for You ●]      │
 ├─────────────────────────────────────────┤
-│  📍 Oakland, CA • 25 mi radius          │
-│  Sort: [Distance ▼]  Show: [30 days ▼]  │
+│  📍 Oakland, CA • 10 mi radius          │
+│  Sort: [Score ▼]  Show: [7 days ▼]      │
 ├─────────────────────────────────────────┤
 │  ┌─────────────────────────────────┐    │
-│  │ Varied Thrush                   │    │
-│  │ Ixoreus naevius                 │    │
+│  │ Varied Thrush (Ixoreus naevius) │    │
 │  │ 🏷 Lifer  🏷 Rare in this region │    │
-│  │ 🏷 Unusual for February         │    │
-│  │ You: never • 5 users spotting   │    │
-│  │ Last spotted: Today • 8 mi     │    │
-│  │ 📍 Tilden Regional Park         │    │
-│  │ [View Checklist →]              │    │
+│  │ [photo] [photo]                 │    │
+│  │ Last spotted: Today             │    │
+│  │   (8 mi away, Tilden RP)        │    │
+│  │ You spotted: never              │    │
+│  │ Show recent sightings           │    │
 │  └─────────────────────────────────┘    │
 │  ┌─────────────────────────────────┐    │
 │  │ Lewis's Woodpecker              │    │
-│  │ Melanerpes lewis                │    │
-│  │ 🏷 Lifer  🏷 <2% of checklists  │    │
-│  │ You: never • 2 users spotting   │    │
-│  │ Last spotted: 2 days ago • 22mi│    │
-│  │ 📍 Briones Regional Park        │    │
-│  │ [View Checklist →]              │    │
-│  └─────────────────────────────────┘    │
-│  ┌─────────────────────────────────┐    │
-│  │ Cedar Waxwing                   │    │
-│  │ Bombycilla cedrorum             │    │
-│  │ 🏷 Unusual for February         │    │
-│  │ You: 3 times • 12 users spotting│    │
-│  │ Last spotted: Yesterday • 15 mi│    │
-│  │ 📍 Lake Merritt                 │    │
-│  │ [View Checklist →]              │    │
+│  │   (Melanerpes lewis)            │    │
+│  │ 🏷 Lifer  🏷 Checklist notes added│   │
+│  │ Last spotted: 2 days ago        │    │
+│  │   (22 mi away, Briones RP)      │    │
+│  │ You spotted: never              │    │
+│  │ Show recent sightings           │    │
 │  └─────────────────────────────────┘    │
 │  ...                                    │
+│  [Show more (8 remaining)]              │
 └─────────────────────────────────────────┘
 ```
 
@@ -367,19 +362,40 @@ A minimalist bird silhouette (perhaps a warbler or thrush in flight) integrated 
 - **API key authentication** (developer key via `x-ebirdapitoken` header, stored server-side only)
 - No OAuth flow available — eBird API does not support user-specific data access
 - User life list imported via CSV upload (not available through API)
-- Query recent nearby observations (`/v2/data/obs/geo/recent`)
-- Query notable/rare observations (`/v2/data/obs/geo/recent/notable`)
-- Species taxonomy (`/v2/ref/taxonomy/ebird`)
-- Checklist details (`/v2/product/checklist/view/{subId}`)
-- **Radius limit**: Max 50km per query; geo-tiling used for larger radii
+- Query recent nearby observations (`/data/obs/geo/recent`) — one entry per species (most recent globally)
+- Query notable/rare observations (`/data/obs/geo/recent/notable`) — one entry per checklist for notable species
+- Query per-species recent observations (`/data/obs/geo/recent/{speciesCode}`) — one entry per location, used for Species Detail sighting count and checklist list
+- Species taxonomy (`/ref/taxonomy/ebird`)
+- Checklist details (`/product/checklist/view/{subId}`) — used to check species-level `comments` field for documentation scoring
+- **Radius limit**: Max 50km per query; app max 25mi (~40km) stays within limit
+
+**Macaulay Library** (Cornell Lab)
+- Photo thumbnails fetched via `https://search.macaulaylibrary.org/api/v1/search?subId={checklistId}&mediaType=Photo`
+- The `subId` parameter returns only photos submitted as part of that specific checklist
+- Each photo result includes `speciesCode` and `assetId`; thumbnail URL: `https://cdn.download.ams.birds.cornell.edu/api/v1/asset/{assetId}/320`
+- Cached 24 hours server-side per checklist ID
+
+**Nominatim (OpenStreetMap)**
+- ZIP code → lat/lng geocoding for US ZIP codes
+- Cached permanently server-side per ZIP code
+
+### CSV Format Support
+
+Two eBird CSV export formats are supported:
+- **Life List export** (`ebird.org/lifelist` → Download CSV): one row per species, columns include `Taxon Order`, `SubID`
+- **My Data export** (`ebird.org/downloadMyData`): one row per observation, columns include `Submission ID`, `Taxonomic Order`
 
 ### Data Refresh Strategy
 
 | Data Type | Refresh Frequency |
 |-----------|-------------------|
 | User's life list | On CSV re-import (user-triggered) |
-| Nearby sightings | Cached 30 minutes |
+| Nearby sightings (all species) | Cached 30 minutes |
+| Per-species sightings (Species Detail) | Cached 30 minutes |
+| Checklist details (comments) | Cached 24 hours |
+| Checklist photos (Macaulay Library) | Cached 24 hours per checklist |
 | Taxonomy | Cached 24 hours |
+| ZIP code geocoding | Cached permanently |
 | User location | On-demand (user-triggered) |
 
 ### Performance Requirements
@@ -387,11 +403,6 @@ A minimalist bird silhouette (perhaps a warbler or thrush in flight) integrated 
 - Initial page load: < 3 seconds
 - Life list render: < 2 seconds for 500+ species
 - Nearby sightings query: < 2 seconds
-
-### Offline Considerations (MVP)
-
-- Display cached life list when offline
-- Show "last updated" timestamp
 
 ---
 
@@ -414,9 +425,11 @@ The following features are deferred to future releases:
 - Multiple saved locations / "trip mode"
 - Social features (following other birders, sharing)
 - In-app bird identification
-- Photo upload or management
 - Offline-first / PWA functionality
 - Native mobile apps (iOS/Android)
+- Seasonal rarity scoring (out-of-season vagrants, early/late migrants)
+- Address autocomplete / map-based location picker
+- Bird photo upload or management (in-app)
 
 ---
 
@@ -426,6 +439,7 @@ The following features are deferred to future releases:
 - Multiple saved locations
 - "Rare bird alerts" with configurable rarity threshold
 - Historical sighting patterns ("Best time to see X")
+- Seasonal rarity scoring
 
 ### Phase 3: Social & Community
 - Follow other birders
@@ -450,14 +464,15 @@ The following features are deferred to future releases:
 | Lifer | A bird species seen for the first time (added to life list) |
 | Checklist | An eBird submission documenting birds observed at a location/time |
 | Hotspot | A popular birding location tracked by eBird |
+| Notable | eBird's designation for species rare or unusual for a given region |
 
 ### References
 
 - eBird API Documentation: https://documenter.getpostman.com/view/664302/S1ENwy59
-- eBird Life List: https://ebird.org/lifelist
+- eBird Life List: https://ebird.org/lifelist?time=life&r=world
 - eBird Terms of Use: https://www.birds.cornell.edu/home/ebird-api-terms-of-use/
 
 ---
 
-*Document Version: 1.0 (MVP)*
+*Document Version: 3.0 (MVP — restructured)*
 *Last Updated: February 2026*

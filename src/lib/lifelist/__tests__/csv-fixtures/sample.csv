@@ -1,0 +1,7 @@
+Submission ID,Common Name,Scientific Name,Taxonomic Order,Count,State/Province,County,Location,Latitude,Longitude,Date,Time,Protocol,Duration (Min),All Obs Reported,Distance Traveled (km),Area Covered (ha),Number of Observers,Breeding Code,Species Comments,Checklist Comments
+S123456789,American Robin,Turdus migratorius,19615,3,US-NY,New York,Central Park,40.7829,-73.9654,2025-06-15,08:30 AM,eBird - Traveling Count,60,1,2.5,,1,,,Morning walk
+S123456789,Northern Cardinal,Cardinalis cardinalis,20137,2,US-NY,New York,Central Park,40.7829,-73.9654,2025-06-15,08:30 AM,eBird - Traveling Count,60,1,2.5,,1,,,Morning walk
+S123456790,American Robin,Turdus migratorius,19615,1,US-NY,New York,Prospect Park,40.6602,-73.969,2025-08-20,07:00 AM,eBird - Traveling Count,45,1,1.8,,2,,,
+S123456791,Varied Thrush,Ixoreus naevius,19617,X,US-CA,Alameda,Tilden Regional Park,37.9,-122.24,2026-01-10,09:00 AM,eBird - Stationary Count,30,1,,,1,,,Rare find!
+S123456792,American Robin,Turdus migratorius,19615,2,US-CA,Alameda,Lake Merritt,37.8044,-122.2636,2024-03-01,10:00 AM,eBird - Traveling Count,90,1,3.0,,1,,,
+S123456793,Lewis's Woodpecker,Melanerpes lewis,17853,1,US-CA,Contra Costa,Briones Regional Park,37.9319,-122.1516,2026-02-05,08:00 AM,eBird - Traveling Count,120,1,4.0,,3,,,

@@ -20,7 +20,6 @@ src/lib/ebird/
   client.ts          — HTTP client (fetch + x-ebirdapitoken header + retry + Zod validation)
   types.ts           — Zod schemas & TypeScript types for all eBird responses
   cache.ts           — In-memory cache with TTL (swappable to Redis later)
-  geo-tiling.ts      — Multi-query tiling for radius > 50km
   endpoints/
     observations.ts  — Recent & notable nearby observations
     taxonomy.ts      — Species taxonomy
@@ -54,7 +53,7 @@ src/app/api/
 ### eBird API Constraints
 - **No OAuth**: API key only (`x-ebirdapitoken`), stored server-side in `.env`
 - **No user life list endpoint**: Life list imported via CSV upload
-- **50km radius cap**: Geo-tiling with hexagonal packing for larger radii
+- **50km radius cap**: App max 25mi (~40km) stays within API limit; no geo-tiling needed
 - **30-day lookback max**: `back` parameter capped at 30
 
 ### Caching Strategy
