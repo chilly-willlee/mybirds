@@ -111,10 +111,10 @@ describe("EBirdChecklistSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  it("rejects checklist missing loc", () => {
+  it("accepts checklist missing loc (loc is optional — eBird API omits it)", () => {
     const { loc, ...rest } = validChecklist;
     const result = EBirdChecklistSchema.safeParse(rest);
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(true);
   });
 });
 

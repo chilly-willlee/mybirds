@@ -79,7 +79,7 @@ export function BirdCard({ bird, showUserStats = false, back = 7 }: BirdCardProp
     if (!detail && lat !== null && lng !== null) {
       setDetailLoading(true);
       fetch(
-        `/api/birds/species/${bird.speciesCode}?lat=${lat}&lng=${lng}&radiusMiles=${radiusMiles}&back=${back}`,
+        `/api/birds/species/${bird.speciesCode}?lat=${lat}&lng=${lng}&radiusMiles=${radiusMiles}&back=${back}&subIds=${bird.allSubIds.join(",")}`,
       )
         .then((r) => (r.ok ? r.json() : null))
         .then((data) => { if (data) setDetail(data); })
@@ -96,7 +96,7 @@ export function BirdCard({ bird, showUserStats = false, back = 7 }: BirdCardProp
             href={`https://ebird.org/species/${bird.speciesCode}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-forest hover:text-forest-light transition-colors"
+            className="text-forest hover:text-forest-light hover:underline hover:underline-offset-2 transition-colors"
           >
             {bird.comName}
           </a>
@@ -118,18 +118,19 @@ export function BirdCard({ bird, showUserStats = false, back = 7 }: BirdCardProp
 
         {/* Line 4: Stats */}
         <p className="flex text-sm text-slate min-w-0">
-          <span className="flex-shrink-0 whitespace-nowrap">Last spotted: {formatRelativeDate(bird.obsDt)} · {distanceMi} mi away ·</span>
-          <span className="truncate"> {bird.locName}</span>
+          <span className="flex-shrink-0 whitespace-nowrap">Last seen: {formatRelativeDate(bird.obsDt)} · {distanceMi} mi away ·</span>
+          {" "}
+          <span className="truncate">{bird.locName}</span>
         </p>
 
         {/* Line 5: Your sightings (logged-in only) */}
         {showUserStats && (
           <p className="text-sm text-slate">
             {bird.userObservationCount === 0
-              ? "You spotted: never"
+              ? "You've seen: never"
               : bird.userObservationCount === 1
-              ? "You spotted: 1 time"
-              : `You spotted: ${bird.userObservationCount} times`}
+              ? "You've seen: 1 time"
+              : `You've seen: ${bird.userObservationCount} times`}
           </p>
         )}
 
@@ -139,7 +140,7 @@ export function BirdCard({ bird, showUserStats = false, back = 7 }: BirdCardProp
             href={`https://ebird.org/checklist/${bird.subId ?? bird.allSubIds[0]}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="block text-sm text-forest hover:text-forest-light font-medium transition-colors"
+            className="block text-sm text-forest hover:text-forest-light hover:underline hover:underline-offset-2 font-medium transition-colors"
           >
             View checklist
           </a>
@@ -175,12 +176,12 @@ export function BirdCard({ bird, showUserStats = false, back = 7 }: BirdCardProp
                   <div className="space-y-1">
                     {detail.checklists.map((cl) => (
                       <p key={cl.subId} className="text-sm text-slate flex items-center min-w-0 gap-1.5">
-                        <span className="flex-shrink-0 whitespace-nowrap">{formatRelativeDate(cl.obsDt)} · {cl.distanceMiles} mi away · </span>
+                        <span className="flex-shrink-0 whitespace-nowrap">{formatRelativeDate(cl.obsDt)} · {cl.distanceMiles} mi · </span>
                         <a
                           href={`https://ebird.org/checklist/${cl.subId}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="truncate text-forest hover:text-forest-light font-medium transition-colors"
+                          className="truncate text-forest hover:text-forest-light hover:underline hover:underline-offset-2 font-medium transition-colors"
                         >
                           {cl.locName}
                         </a>

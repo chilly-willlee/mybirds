@@ -3,19 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { useLocation } from "@/contexts/location-context";
-import { GreatBlueHeron } from "@/components/icons/great-blue-heron";
+import { GreatEgret } from "@/components/icons/great-egret";
 
 const navItems = [
   { href: "/", label: "Birds for You" },
   { href: "/lifelist", label: "Life List" },
-  { href: "/settings", label: "Settings" },
 ];
 
 export function Navigation() {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const { radiusMiles } = useLocation();
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
@@ -27,7 +24,7 @@ export function Navigation() {
       {/* Desktop nav */}
       <nav className="hidden md:flex items-center justify-between px-6 py-3 bg-surface border-b border-gray-100">
         <Link href="/" className="flex items-center gap-2 text-forest">
-          <GreatBlueHeron size={22} />
+          <GreatEgret size={22} />
           <span className="text-lg font-semibold tracking-tight">New Birds</span>
         </Link>
         <div className="flex items-center gap-6">
@@ -44,7 +41,6 @@ export function Navigation() {
           ))}
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-xs text-slate">{radiusMiles} mi radius</span>
           {session ? (
             <button
               onClick={() => signOut()}

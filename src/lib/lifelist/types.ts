@@ -49,15 +49,18 @@ export interface LifeListEntry {
   commonName: string;
   taxonomicOrder: number;
   observationCount: number;
+  speciesCode?: string;
   firstObservation: {
     date: string;
     location: string;
     checklistId: string;
+    locationId?: string;
   };
   lastObservation: {
     date: string;
     location: string;
     checklistId: string;
+    locationId?: string;
   };
 }
 

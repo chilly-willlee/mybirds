@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod/v4";
 import { auth } from "@/lib/auth";
-import { getLifeList } from "@/lib/db/life-list";
+import { getLifeList, getLifeListStats, getImportStatus } from "@/lib/db/life-list";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 const QuerySchema = z.object({
-  sort: z.enum(["date-asc", "date-desc", "alpha-asc", "alpha-desc"]).default("date-desc"),
+  sort: z.enum(["date-asc", "date-desc", "last-date-asc", "last-date-desc", "alpha-asc", "alpha-desc", "taxonomic"]).default("date-desc"),
   search: z.string().optional(),
 });
 
@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
   }
 
   let species = await getLifeList(session.user.id);
+  const totalCount = species.length;
 
   if (parsed.data.search) {
     const q = parsed.data.search.toLowerCase();
@@ -47,16 +48,32 @@ export async function GET(request: NextRequest) {
     case "date-desc":
       species.sort((a, b) => toTime(b.firstObservation.date) - toTime(a.firstObservation.date));
       break;
+    case "last-date-asc":
+      species.sort((a, b) => toTime(a.lastObservation.date) - toTime(b.lastObservation.date));
+      break;
+    case "last-date-desc":
+      species.sort((a, b) => toTime(b.lastObservation.date) - toTime(a.lastObservation.date));
+      break;
     case "alpha-asc":
       species.sort((a, b) => a.commonName.localeCompare(b.commonName));
       break;
     case "alpha-desc":
       species.sort((a, b) => b.commonName.localeCompare(a.commonName));
       break;
+    case "taxonomic":
+      species.sort((a, b) => a.taxonomicOrder - b.taxonomicOrder);
+      break;
   }
+
+  const [stats, importStatus] = await Promise.all([
+    getLifeListStats(session.user.id),
+    getImportStatus(session.user.id),
+  ]);
 
   return NextResponse.json({
     species,
-    totalCount: species.length,
+    totalCount,
+    lastImportedAt: stats.lastImportedAt,
+    importStatus,
   });
 }

@@ -26,9 +26,9 @@ async function buildCommentSpecies(
   client: ReturnType<typeof getEBirdClient>,
   cache: ReturnType<typeof getCache>,
 ): Promise<Set<string>> {
-  const notableSubIds = notableObs.flatMap((o) => (o.subId ? [o.subId] : []));
   const recentSubIds = recentObs.flatMap((o) => (o.subId ? [o.subId] : []));
-  const uniqueSubIds = Array.from(new Set([...notableSubIds, ...recentSubIds])).slice(
+  const notableSubIds = notableObs.flatMap((o) => (o.subId ? [o.subId] : []));
+  const uniqueSubIds = Array.from(new Set([...recentSubIds, ...notableSubIds])).slice(
     0,
     MAX_CHECKLIST_FETCHES,
   );
@@ -82,14 +82,14 @@ export async function GET(request: NextRequest) {
   const recentKey = observationsCacheKey(lat, lng, distKm, back);
   let recentObs = await cache.get<EBirdObservation[]>(recentKey);
   if (!recentObs) {
-    recentObs = await getRecentNearbyObservations(client, { lat, lng, dist: distKm, back });
+    recentObs = await getRecentNearbyObservations(client, { lat, lng, dist: distKm, back, includeProvisional: true });
     await cache.set(recentKey, recentObs, CACHE_TTL.observations);
   }
 
   const notKey = notableCacheKey(lat, lng, distKm, back);
   let notableObs = await cache.get<EBirdObservation[]>(notKey);
   if (!notableObs) {
-    notableObs = await getRecentNearbyNotableObservations(client, { lat, lng, dist: distKm, back });
+    notableObs = await getRecentNearbyNotableObservations(client, { lat, lng, dist: distKm, back, includeProvisional: true });
     await cache.set(notKey, notableObs, CACHE_TTL.notable);
   }
 

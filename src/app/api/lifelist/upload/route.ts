@@ -2,9 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { parseLifeListCsv } from "@/lib/lifelist/csv-parser";
 import { auth } from "@/lib/auth";
-import { upsertLifeList, recordImport } from "@/lib/db/life-list";
+import { upsertFirstSeenList, mergeLastSeenData, upsertLifeList, recordImport } from "@/lib/db/life-list";
+import { getEBirdClient, getCache } from "@/lib/ebird/singleton";
+import { getTaxonomy } from "@/lib/ebird/endpoints/taxonomy";
+import { CACHE_TTL, taxonomyCacheKey } from "@/lib/ebird/cache";
+import type { EBirdTaxon } from "@/lib/ebird/types";
+import type { LifeListEntry } from "@/lib/lifelist/types";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
+const VALID_TYPES = ["first-seen", "last-seen", "my-data"] as const;
+type UploadType = (typeof VALID_TYPES)[number];
 
 export async function POST(request: NextRequest) {
   const ip = request.headers.get("x-forwarded-for") ?? "unknown";
@@ -31,6 +38,12 @@ export async function POST(request: NextRequest) {
 
   const formData = await request.formData();
   const file = formData.get("file");
+  const typeParam = (formData.get("type") as string) ?? "first-seen";
+
+  if (!VALID_TYPES.includes(typeParam as UploadType)) {
+    return NextResponse.json({ error: "Invalid type parameter" }, { status: 400 });
+  }
+  const uploadType = typeParam as UploadType;
 
   if (!file || !(file instanceof File)) {
     return NextResponse.json(
@@ -56,8 +69,36 @@ export async function POST(request: NextRequest) {
   const text = await file.text();
   const result = parseLifeListCsv(text);
 
-  await upsertLifeList(session.user.id, result.species);
-  await recordImport(session.user.id, {
+  const client = getEBirdClient();
+  const cache = getCache();
+  const cacheKey = taxonomyCacheKey();
+  let taxonomy = await cache.get<EBirdTaxon[]>(cacheKey);
+  if (!taxonomy) {
+    taxonomy = await getTaxonomy(client);
+    await cache.set(cacheKey, taxonomy, CACHE_TTL.taxonomy);
+  }
+  const sciNameToCode = new Map(taxonomy.map((t) => [t.sciName, t.speciesCode]));
+  const enriched: LifeListEntry[] = result.species.map((e) => ({
+    ...e,
+    speciesCode: sciNameToCode.get(e.scientificName),
+  }));
+
+  if (uploadType === "first-seen") {
+    await upsertFirstSeenList(session.user.id, enriched);
+  } else if (uploadType === "last-seen") {
+    // The parser puts the CSV date into firstObservation; swap it to lastObservation
+    const swapped: LifeListEntry[] = enriched.map((e) => ({
+      ...e,
+      firstObservation: { date: "", location: "", checklistId: "" },
+      lastObservation: e.firstObservation,
+    }));
+    await mergeLastSeenData(session.user.id, swapped);
+  } else {
+    // my-data: full replace with both first + last correctly populated by parser
+    await upsertLifeList(session.user.id, enriched);
+  }
+
+  await recordImport(session.user.id, uploadType, {
     speciesCount: result.species.length,
     totalObservations: result.totalObservations,
     skippedRows: result.skippedRows,
@@ -67,7 +108,6 @@ export async function POST(request: NextRequest) {
     speciesCount: result.species.length,
     totalObservations: result.totalObservations,
     skippedRows: result.skippedRows,
-    species: result.species,
   }, {
     headers: { "X-RateLimit-Remaining": String(remaining) },
   });

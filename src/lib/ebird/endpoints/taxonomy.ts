@@ -10,7 +10,7 @@ export async function getTaxonomy(
   client: EBirdClient,
   params?: TaxonomyParams,
 ): Promise<EBirdTaxon[]> {
-  const queryParams: Record<string, string | number | boolean> = {};
+  const queryParams: Record<string, string | number | boolean> = { fmt: "json" };
   if (params?.species?.length) {
     queryParams.species = params.species.join(",");
   }

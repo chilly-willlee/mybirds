@@ -77,12 +77,15 @@ export const lifeListEntries = pgTable(
     commonName: text("common_name").notNull(),
     taxonomicOrder: integer("taxonomic_order").notNull(),
     observationCount: integer("observation_count").default(1).notNull(),
+    speciesCode: text("species_code"),
     firstObsDate: text("first_obs_date"),
     firstObsLocation: text("first_obs_location"),
     firstObsChecklistId: text("first_obs_checklist_id"),
+    firstObsLocationId: text("first_obs_location_id"),
     lastObsDate: text("last_obs_date"),
     lastObsLocation: text("last_obs_location"),
     lastObsChecklistId: text("last_obs_checklist_id"),
+    lastObsLocationId: text("last_obs_location_id"),
     importedAt: timestamp("imported_at", { mode: "date" }).defaultNow().notNull(),
   },
   (t) => [uniqueIndex("life_list_user_species").on(t.userId, t.scientificName)],
@@ -95,6 +98,7 @@ export const lifeListImports = pgTable("life_list_imports", {
   userId: text("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
+  type: text("type").$type<"first-seen" | "last-seen" | "my-data">().notNull().default("first-seen"),
   speciesCount: integer("species_count").notNull(),
   totalObservations: integer("total_observations").notNull(),
   skippedRows: integer("skipped_rows").default(0).notNull(),

@@ -65,16 +65,18 @@ export const EBirdChecklistEntrySchema = z.object({
 
 export const EBirdChecklistSchema = z.object({
   subId: z.string(),
-  protocolId: z.string(),
-  locId: z.string(),
-  loc: z.object({
-    locId: z.string(),
-    name: z.string(),
-    latitude: z.number(),
-    longitude: z.number(),
-    countryCode: z.string(),
-    subnational1Code: z.string(),
-  }),
+  protocolId: z.string().optional(),
+  locId: z.string().optional(),
+  loc: z
+    .object({
+      locId: z.string().optional(),
+      name: z.string(),
+      latitude: z.number(),
+      longitude: z.number(),
+      countryCode: z.string().optional(),
+      subnational1Code: z.string().optional(),
+    })
+    .optional(),
   obsDt: z.string(),
   numObservers: z.number().optional(),
   obs: z.array(EBirdChecklistEntrySchema),

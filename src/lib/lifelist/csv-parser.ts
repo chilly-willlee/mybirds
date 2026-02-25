@@ -58,12 +58,12 @@ function parseMyDataRows(data: Record<string, string>[]): LifeListParseResult {
         scientificName: sciName,
         commonName: row["Common Name"],
         taxonomicOrder: row["Taxonomic Order"],
-        observationCount: parseCount(row["Count"]),
+        observationCount: 1,
         firstObservation: { ...obsInfo },
         lastObservation: { ...obsInfo },
       });
     } else {
-      existing.observationCount += parseCount(row["Count"]);
+      existing.observationCount += 1;
 
       const existingFirst = parseDate(existing.firstObservation.date);
       if (rowDate < existingFirst) {
@@ -96,19 +96,24 @@ function parseLifeListRows(data: Record<string, string>[]): LifeListParseResult 
     }
 
     const row: EBirdLifeListRow = result.data;
+    if (row["Category"] !== "species") {
+      skippedRows++;
+      continue;
+    }
     const obsInfo = {
       date: row["Date"],
       location: row["Location"],
       checklistId: row["SubID"],
+      locationId: row["LocID"],
     };
 
     species.push({
       scientificName: row["Scientific Name"],
       commonName: row["Common Name"],
       taxonomicOrder: row["Taxon Order"],
-      observationCount: parseCount(row["Count"]),
+      observationCount: 0, // Life List CSV has no total-observations count
       firstObservation: { ...obsInfo },
-      lastObservation: { ...obsInfo },
+      lastObservation: { date: "", location: "", checklistId: "" }, // not available in this format
     });
   }
 

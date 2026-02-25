@@ -40,8 +40,12 @@ Features in this section are shared between logged-out visitors and logged-in us
 
 A paginated list (20 per page, "Show more" button) of relatively rare birds recently sighted near the user's location. Location is determined via browser geolocation (with a prompt) or by ZIP code.
 
+**Location bar** (appears above the bird list, visible to all users):
+- **Use My Location**: One-click button that triggers browser geolocation
+- **ZIP code**: Text input + "Go" button to set location by ZIP code
+- **Search radius**: Slider (1–25 mi, default 10 mi) — displayed inline with the above on tablet/desktop; wraps to a second row on mobile
+
 **Controls**:
-- **ZIP code**: Text input to set location by ZIP code
 - **Sort**: Score (default), Distance, Date, Alphabetical
 - **Lookback**: 1 day, 3 days, 7 days (max)
 
@@ -54,8 +58,8 @@ A paginated list (20 per page, "Show more" button) of relatively rare birds rece
 | Name | Common name (linked to eBird species page) followed by scientific name in italics in parentheses — e.g., `Varied Thrush (Ixoreus naevius)` |
 | Tags | One or more reason tags explaining why this bird is notable (see [Rarity Scoring](#rarity-scoring)). Omitted if no tags. |
 | Photos | Up to 3 thumbnails sourced from the checklists referenced by this entry. Each thumbnail links to its originating checklist. Omitted if no photos. |
-| Stats | `Last spotted: [date] · [distance] mi away · [location]` — e.g., `Last spotted: Today · 8 mi away · Tilden Regional Park`. The location name is truncated with CSS ellipsis to prevent the line from wrapping. |
-| Your sightings | `You spotted: never`, `You spotted: 1 time`, or `You spotted: [N] times` — logged-in users only |
+| Stats | `Last seen: [date] · [distance] mi away · [location]` — e.g., `Last seen: Today · 8 mi away · Tilden Regional Park`. The location name is truncated with CSS ellipsis to prevent the line from wrapping. |
+| Your sightings | `You've seen: never`, `You've seen: 1 time`, or `You've seen: [N] times` — logged-in users only |
 | CTA | "Show recent sightings" link that expands the Species Detail section inline |
 
 **Species Detail** (inline, below the card entry, loaded on demand):
@@ -96,40 +100,54 @@ Logged-in users see the same Birds for You list as logged-out users (see [All Us
 | Line | Content |
 |------|---------|
 | Lifer tag | "Lifer" reason tag added to the tags line if species is not on the user's life list |
-| Your sightings | `You spotted: never`, `You spotted: 1 time`, or `You spotted: [N] times` — displayed between the stats line and the "Show details" CTA |
+| Your sightings | `You've seen: never`, `You've seen: 1 time`, or `You've seen: [N] times` — displayed between the stats line and the "Show details" CTA |
 
 #### Life List Screen
 
-Displays all bird species the user has observed in their lifetime, sourced from their uploaded CSV. Headline: **"Life List"**.
+Displays all bird species the user has observed in their lifetime, sourced from their uploaded CSVs. Headline: **"Life List"**.
 
-**Data Source**: User-uploaded CSV from `https://ebird.org/lifelist?time=life&r=world`
+**Data Source**: Two separate Life List CSV downloads from `https://ebird.org/lifelist?time=life&r=world`. The eBird Life List page has a sort order control; the CSV's `Date` column reflects whichever date is the active sort key:
+- **First Seen CSV**: Sort by "Date first observed" before downloading. `Date` = date of first sighting.
+- **Last Seen CSV**: Sort by "Date last observed" before downloading. `Date` = date of most recent sighting.
 
-**Display Controls**:
-- **Sort options**: Date newest/oldest (default), Alphabetical A–Z / Z–A
-- **Search/filter**: Text search by species name
-- **Total count**: Display total species count prominently
+Both CSVs share the same file format. They are uploaded separately using the type selector in the upload controls.
+
+**Upload Controls** (shown above the species list):
+- **Two upload buttons**: `Upload CSV: [First Seen] [Last Seen]` — each button opens a file picker and uploads directly as that type.
+- **Import status**: Two status lines, one per type — e.g. `First seen: 847 species · Feb 5, 2026` and `Last seen: 847 species · Feb 5, 2026`. Each shows "not uploaded" until that type has been imported.
+- **Download link**: `Download from eBird ↗` links to `https://ebird.org/lifelist?time=life&r=world`.
+
+**Display Controls** (search row, below upload controls; wraps on mobile):
+- **Search**: Text search by species name
+- **Sort**: Newest first (default), Oldest first, A–Z, Z–A, Taxonomic. Date-based sort options (Newest/Oldest) sort by whichever date mode is active.
+- **Date mode toggle**: Segmented control `[First Seen | Last Seen]` — always shown. A mode is greyed out (disabled with tooltip "Upload [First/Last] Seen CSV to enable") if that CSV has not been uploaded yet.
+- **Total count**: Displayed above the upload controls, e.g. `342 species`
 
 **Species Entry Display**:
 
 | Line | Content |
 |------|---------|
-| Line 1 | `[Common Name] (Scientific name)` — e.g., `American Robin (Turdus migratorius)` |
-| Line 2 | `First spotted: [date] · [location]` — e.g., `First spotted: Mar 3, 2018 · Central Park, NY` |
+| Line 1 | `[Common Name] (Scientific name)` — common name links to eBird species page (`/species/{speciesCode}`). "Seen N times ↗" shown right-aligned, linking to `https://ebird.org/lifelist?r=world&time=life&spp={speciesCode}` (only shown when observationCount > 0 and speciesCode available). |
+| Line 2 | `First seen: [date] · [location]` or `Last seen: [date] · [location]` depending on date mode. Date links to its eBird checklist. Location links to eBird life list for that location (if locationId available). If the selected mode's data is missing for a species, falls back to the other mode's date. |
+| Line 3 | `[📷 Show photos]` — on-demand photo thumbnails from last-spotted checklist. Up to 3 thumbnails, each linking to the checklist. Only shown when speciesCode and last checklist ID are available. |
+
+**Links**: No underline by default; underline appears on hover. Consistent with Birds for You styling.
+
+**Merge strategy**: Species lists from both CSVs are unioned. A species present in only one upload retains only that date; the missing date falls back to the available one for display purposes. Species are keyed by scientific name.
+
+**Data notes**:
+- `observationCount` ("Seen N times") is only populated from My Data CSV imports. Life List CSV imports do not include a total observation count; the field is set to 0 and "Seen N times" is hidden.
+- `speciesCode` and `locationId` are populated at import time. Older imports may require re-upload.
 
 #### User Profile Settings
 
 ##### Life List Import
-- **CSV upload**: User downloads their life list from [ebird.org/lifelist?time=life&r=world](https://ebird.org/lifelist?time=life&r=world) ("Download CSV") or full observation history from [ebird.org/downloadMyData](https://ebird.org/downloadMyData), then uploads to New Birds
-- Both eBird CSV formats supported (Life List export and My Data export)
-- Display import status: species count, upload confirmation message
-- Link to eBird download page
+- **Upload controls on Life List screen** (not in Settings): the upload type selector, CSV upload button, and import status are located directly on the Life List screen above the species list.
+- Settings screen does not have a separate life list section.
 
 ##### Location Settings
-- **Browser geolocation**: One-click "Use My Location" with permission prompt
-- **ZIP code lookup**: Enter a US ZIP code to set location
-- **Manual coordinates**: Latitude and longitude text inputs
-- Display current saved coordinates
-- **Search radius**: Slider input (range: 1–25 miles, default: 10 miles)
+- All location controls (Use My Location, ZIP code, radius) live on the Birds for You screen
+- No location settings in this screen
 
 ---
 
@@ -167,47 +185,34 @@ Each species entry displays one or more **reason tags**:
 
 - **Mobile**: Bottom tab bar with icons (Life List, Birds for You, Settings)
 - **Desktop**: Left sidebar or top navigation bar
-- Persistent indication of current location and radius setting
+- Location and radius controls are shown inline on the Birds for You screen, not in the navigation bar
 
 ### Screen: Logged-Out Landing
 
 ```
 ┌─────────────────────────────────────────┐
-│  🐦 New Birds                           │
-│  Discover your next lifer               │
+│  🐦 New Birds                 [Sign in] │
 ├─────────────────────────────────────────┤
 │                                         │
 │  ┌─────────────────────────────────┐    │
-│  │ Sign in to see which birds near │    │
-│  │ you are missing from your list. │    │
-│  │                                 │    │
+│  │ Discover your next lifer.       │    │
 │  │ [Sign up with email →]          │    │
 │  └─────────────────────────────────┘    │
 │                                         │
 │  BIRDS FOR YOU                          │
-│  📍 Oakland, CA  Sort: [Score ▼] [7d ▼] │
+│                                         │
+│  [📍 My Location] [ZIP: _____ Go]       │  ← location bar (mobile: 2 rows)
+│  [══════●══════════════════] 10 mi      │  ← tablet/desktop: same row as above
+│                                         │
+│  Sort: [Score ▼]  [7d ▼]               │
 │                                         │
 │  ┌─────────────────────────────────┐    │
 │  │ Varied Thrush (Ixoreus naevius) │    │
 │  │ 🏷 Rare in this region          │    │
 │  │ [photo] [photo]                 │    │
-│  │ Last spotted: Today             │    │
-│  │   (8 mi away, Tilden RP)        │    │
+│  │ Last seen: Today · 8 mi ·        │    │
+│  │   Tilden Regional Park          │    │
 │  │ Show recent sightings           │    │
-│  └─────────────────────────────────┘    │
-│  ┌─────────────────────────────────┐    │
-│  │ Varied Thrush (Ixoreus naevius) │    │
-│  │ 🏷 Rare in this region          │    │
-│  │ [photo] [photo]                 │    │
-│  │ Last spotted: Today             │    │
-│  │   (8 mi away, Tilden RP)        │    │
-│  │ Hide                            │    │
-│  ├─────────────────────────────────┤    │
-│  │ 5 sightings nearby in the last  │    │
-│  │   7 days                        │    │
-│  │ Tilden RP · Today · 8 mi 📷(2)  │    │
-│  │ Briones RP · Today · 12 mi away │    │
-│  │ Lake Chabot · Yesterday · 6 mi  │    │
 │  └─────────────────────────────────┘    │
 │  ...                                    │
 │  [Show more (12 remaining)]             │
@@ -217,6 +222,9 @@ Each species entry displays one or more **reason tags**:
 │  └─────────────────────────────────┘    │
 │                                         │
 └─────────────────────────────────────────┘
+
+Tablet/desktop — location bar condenses to one row:
+  [📍 My Location]  [ZIP: _____ Go]  [══●══════] 10 mi
 ```
 
 ### Screen: User Profile Settings
@@ -234,20 +242,7 @@ Each species entry displays one or more **reason tags**:
 │  │ Download from eBird ↗           │    │
 │  └─────────────────────────────────┘    │
 │                                         │
-│  LOCATION                               │
-│  ┌─────────────────────────────────┐    │
-│  │ Current: 37.8044, -122.2712     │    │
-│  │ [Use My Location]               │    │
-│  │                                 │    │
-│  │ ZIP Code: [94607] [Set]         │    │
-│  │                                 │    │
-│  │ Latitude: [37.8044]             │    │
-│  │ Longitude: [-122.2712]  [Set]   │    │
-│  │                                 │    │
-│  │ Search Radius: [===●=====] 10mi │    │
-│  └─────────────────────────────────┘    │
-│                                         │
-└─────────────────────────────────────────┘
+│└─────────────────────────────────────────┘
 ```
 
 ### Screen: Life List
@@ -256,17 +251,28 @@ Each species entry displays one or more **reason tags**:
 ┌─────────────────────────────────────────┐
 │  Life List                              │
 ├─────────────────────────────────────────┤
-│  Total Species: 342                     │
-│  [Search... 🔍]  Sort: [Date newest ▼]  │
+│  342 species                            │
+│  Upload CSV: [First Seen] [Last Seen]   │
+│  Download from eBird ↗                  │
+│  First seen: 847 species · Feb 5, 2026  │
+│  Last seen:  not uploaded               │
+├─────────────────────────────────────────┤
+│  [Search...]  [Newest ▼]  [First|Last*] │  ← *Last greyed if not uploaded
 ├─────────────────────────────────────────┤
 │  ┌─────────────────────────────────┐    │
-│  │ American Robin (Turdus          │    │
-│  │   migratorius)                  │    │
-│  │ First spotted: Mar 3, 2018 ·    │    │
+│  │ American Robin          Seen    │    │
+│  │ (Turdus migratorius)  42 times ↗│    │
+│  │ First seen: Mar 15, 2024 ·      │    │
 │  │   Central Park, NY              │    │
+│  │ [📷 Show photos]                │    │
 │  └─────────────────────────────────┘    │
 │  ...                                    │
 └─────────────────────────────────────────┘
+
+Tablet/desktop — controls on one row:
+  Upload CSV: [First Seen] [Last Seen]  [Download from eBird ↗]
+  First seen: 847 species · Feb 5, 2026 | Last seen: 847 species · Feb 5, 2026
+  [Search species.......] [Newest ▼] [● First Seen | Last Seen]
 ```
 
 ---
@@ -336,9 +342,12 @@ A minimalist bird silhouette (perhaps a warbler or thrush in flight) integrated 
 
 ### CSV Format Support
 
-Two eBird CSV export formats are supported:
-- **Life List export** (`ebird.org/lifelist` → Download CSV): one row per species, columns include `Taxon Order`, `SubID`
-- **My Data export** (`ebird.org/downloadMyData`): one row per observation, columns include `Submission ID`, `Taxonomic Order`
+Three eBird CSV import variants are supported:
+- **Life List CSV – First Seen** (`ebird.org/lifelist`, sorted by "Date first observed" → Download CSV): one row per species; `Date`/`SubID`/`LocID` reflect the first sighting. Populates `firstObs*` columns.
+- **Life List CSV – Last Seen** (`ebird.org/lifelist`, sorted by "Date last observed" → Download CSV): same format; `Date`/`SubID`/`LocID` reflect the most recent sighting. Populates `lastObs*` columns.
+- **My Data export** (`ebird.org/downloadMyData`): one row per observation; columns include `Submission ID`, `Taxonomic Order`. Populates both `firstObs*` and `lastObs*` from the earliest/latest rows, and `observationCount` from total row count per species.
+
+The two Life List CSV variants use the same parser; the upload type selector in the UI determines which DB columns are written.
 
 ### Data Refresh Strategy
 

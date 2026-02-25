@@ -23,7 +23,7 @@ describe("getTaxonomy", () => {
 
     expect(client.get).toHaveBeenCalledWith(
       "/ref/taxonomy/ebird",
-      {},
+      expect.objectContaining({ fmt: "json" }),
       expect.anything(),
     );
   });

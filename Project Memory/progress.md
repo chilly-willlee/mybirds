@@ -19,27 +19,34 @@
 ### Phase 2 — Working App (complete)
 - **Database**: Neon PostgreSQL + Drizzle ORM; schema for users, life list entries, imports
 - **Auth**: Auth.js v5 with Resend magic link email
-- **Scoring engine**: 4-signal weighted scoring (Lifer 1000, Notable 500, Low-frequency 250 max, Documentation 150)
+- **Scoring engine**: 4-signal weighted scoring (Lifer 1000, Notable 500, Documentation 150, Recency 150)
 - **UI components**: Button, Card, Tag, Tabs, Slider
 - **Navigation**: Mobile bottom bar + desktop top nav
 - **Auth UI**: Sign-in page (magic link), sign-out
-- **Settings page**: CSV upload, life list stats, location (geolocation / ZIP / manual lat-lng), radius slider
+- **Settings page**: Location (geolocation / ZIP / manual lat-lng), radius slider
 - **Landing page**: Birds for You with controls (sort, days, single-observer filter), pagination (20/page)
-- **Life List page**: Tab A (My Life List — search/sort), Tab B (Birds for You — same controls as landing)
+- **Life List page**: Tab A (My Life List — search/sort/date toggle), Tab B (Birds for You — same controls as landing)
 - **Bird cards**: Photo thumbnails (Macaulay Library), multi-checklist links, reason tags
 - **Geocode API**: ZIP → lat/lng via Nominatim (`/api/geocode`)
 - **Photos API**: Species thumbnails from Macaulay Library (`/api/birds/photos`)
 - **Scored birds API**: Merges recent + notable obs, scores, returns sorted results (`/api/birds/scored`)
-- **eBird URL fix**: Corrected double `/v2` in all endpoint paths
+- **Per-species API**: Recent sightings detail with checklist list + photo counts (`/api/birds/species/[speciesCode]`)
+
+### UI Polish (most recent)
+- **Two-CSV Life List upload**: "Upload CSV: [First Seen] [Last Seen]" — two distinct buttons; each uploads to the correct DB columns. Import status lines show per-type species count + date.
+- **Date mode toggle**: `[First Seen | Last Seen]` segmented control; greyed + tooltip when type not uploaded. Fallback to available date if selected mode has no data.
+- **Life List filtering**: Non-species entries (slash, spuh, hybrid) excluded at parse time via `Category === "species"` check.
+- **observationCount semantics**: Life List CSV = 0 (unknown); My Data CSV = count of checklist rows (occasions seen). "Seen N times" hidden when count is 0.
+- **Verbiage**: "Last spotted" → "Last seen"; "You spotted" → "You've seen" throughout.
+- **Hover underlines**: All text links underline on hover (both Life List and Birds for You screens).
 
 **Total: 120 tests, all passing. Build succeeds.**
 
 ## What's Next
+- Monitor production for bugs surfaced from real usage
 - Manual QA / end-to-end testing with real eBird data
-- Deploy to production (Vercel + Neon)
-- Any bugs surfaced from real usage
 
 ## Known Issues
 - Rate limiter is in-memory (resets on server restart); fine for MVP
 - Photos API depends on undocumented Macaulay Library search endpoint; may break if API changes
-- No persistent "last import date" shown in Settings (spec calls for it, not yet wired up)
+- `mergeLastSeenData` uses explicit SELECT → UPDATE → INSERT (not `onConflictDoUpdate`) due to Drizzle ORM requiring a unique CONSTRAINT (not just `uniqueIndex`) for conflict resolution
