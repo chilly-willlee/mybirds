@@ -1,7 +1,7 @@
 # Progress
 
 ## Current Status
-**Phase**: Phase 2 — Working App (DB + Auth + Scoring + UI) (**COMPLETE**)
+**Phase**: Beta v0.1 — deployed to production at https://new-birds.vercel.app
 
 ## What's Done
 
@@ -32,19 +32,21 @@
 - **Scored birds API**: Merges recent + notable obs, scores, returns sorted results (`/api/birds/scored`)
 - **Per-species API**: Recent sightings detail with checklist list + photo counts (`/api/birds/species/[speciesCode]`)
 
-### UI Polish (most recent)
+### Beta v0.1 Polish (complete)
 - **Two-CSV Life List upload**: "Upload CSV: [First Seen] [Last Seen]" — two distinct buttons; each uploads to the correct DB columns. Import status lines show per-type species count + date.
 - **Date mode toggle**: `[First Seen | Last Seen]` segmented control; greyed + tooltip when type not uploaded. Fallback to available date if selected mode has no data.
-- **Life List filtering**: Non-species entries (slash, spuh, hybrid) excluded at parse time via `Category === "species"` check.
-- **observationCount semantics**: Life List CSV = 0 (unknown); My Data CSV = count of checklist rows (occasions seen). "Seen N times" hidden when count is 0.
-- **Verbiage**: "Last spotted" → "Last seen"; "You spotted" → "You've seen" throughout.
-- **Hover underlines**: All text links underline on hover (both Life List and Birds for You screens).
+- **Life List filtering**: Non-species entries (slash, spuh, hybrid) excluded at parse time.
+- **observationCount semantics**: Life List CSV = 0 (unknown); My Data CSV = checklist row count. "Seen N times" hidden when count is 0.
+- **Relative timestamps**: "Just now" (< 1h), "X hours ago" (< 24h), "Yesterday", "X days ago", or short date.
+- **Verbiage**: "Last spotted" → "Last seen"; "You spotted" → "You've seen".
+- **Hover underlines**: All text links underline on hover (Life List + Birds for You).
+- **Logo mark hidden**: Nav wordmark only.
 
 **Total: 120 tests, all passing. Build succeeds.**
 
 ## What's Next
-- Monitor production for bugs surfaced from real usage
-- Manual QA / end-to-end testing with real eBird data
+- Monitor production for bugs from real usage
+- Gather beta feedback
 
 ## Known Issues
 - Rate limiter is in-memory (resets on server restart); fine for MVP

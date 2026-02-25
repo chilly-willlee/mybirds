@@ -58,7 +58,7 @@ A paginated list (20 per page, "Show more" button) of relatively rare birds rece
 | Name | Common name (linked to eBird species page) followed by scientific name in italics in parentheses — e.g., `Varied Thrush (Ixoreus naevius)` |
 | Tags | One or more reason tags explaining why this bird is notable (see [Rarity Scoring](#rarity-scoring)). Omitted if no tags. |
 | Photos | Up to 3 thumbnails sourced from the checklists referenced by this entry. Each thumbnail links to its originating checklist. Omitted if no photos. |
-| Stats | `Last seen: [date] · [distance] mi away · [location]` — e.g., `Last seen: Today · 8 mi away · Tilden Regional Park`. The location name is truncated with CSS ellipsis to prevent the line from wrapping. |
+| Stats | `Last seen: [relative time] · [distance] mi away · [location]` — e.g., `Last seen: 3 hours ago · 8 mi away · Tilden Regional Park`. Relative time: "Just now" (< 1h), "X hours ago" (< 24h), "Yesterday", "X days ago" (< 7d), or short date. Location name is truncated with CSS ellipsis to prevent the line from wrapping. |
 | Your sightings | `You've seen: never`, `You've seen: 1 time`, or `You've seen: [N] times` — logged-in users only |
 | CTA | "Show recent sightings" link that expands the Species Detail section inline |
 
@@ -438,5 +438,5 @@ The following features are deferred to future releases:
 
 ---
 
-*Document Version: 3.0 (MVP — restructured)*
+*Document Version: 3.1 (Beta v0.1)*
 *Last Updated: February 2026*
