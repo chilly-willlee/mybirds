@@ -120,8 +120,8 @@ export function BirdCard({ bird, showUserStats = false, back = 7 }: BirdCardProp
 
         {/* Line 4: Stats */}
         <p className="flex text-sm text-slate min-w-0">
-          <span className="flex-shrink-0 whitespace-nowrap">Last seen: {formatRelativeDate(bird.obsDt)} · {distanceMi} mi away · </span>
-          <span className="truncate">{bird.locName}</span>
+          <span className="flex-shrink-0 whitespace-nowrap">Last seen: {formatRelativeDate(bird.obsDt)} · {distanceMi} mi away ·</span>
+          <span className="truncate ml-1">{bird.locName}</span>
         </p>
 
         {/* Line 5: Your sightings (logged-in only) */}
