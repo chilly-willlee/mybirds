@@ -10,10 +10,11 @@ interface ScoreInput {
   commentSpecies?: Set<string>;
   userLat: number;
   userLng: number;
+  back?: number;
 }
 
 export function scoreObservations(input: ScoreInput): ScoredObservation[] {
-  const { recentObs, notableObs, lifeList, commentSpecies, userLat, userLng } = input;
+  const { recentObs, notableObs, lifeList, commentSpecies, userLat, userLng, back = 14 } = input;
 
   const notableSet = new Set(notableObs.map((o) => o.speciesCode));
 
@@ -61,6 +62,10 @@ export function scoreObservations(input: ScoreInput): ScoredObservation[] {
       score += SCORE_WEIGHTS.CHECKLIST_NOTES;
       reasons.push({ type: "checklist-notes" });
     }
+
+    const obsDate = new Date(obs.obsDt);
+    const daysOld = (Date.now() - obsDate.getTime()) / (1000 * 60 * 60 * 24);
+    score += Math.max(0, Math.round(SCORE_WEIGHTS.LAST_SPOTTED * (1 - daysOld / back)));
 
     const subIdMap = speciesSubIdDates.get(speciesCode) ?? new Map<string, string>();
     const allSubIds = Array.from(subIdMap.entries())

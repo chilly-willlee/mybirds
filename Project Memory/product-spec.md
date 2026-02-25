@@ -54,7 +54,7 @@ A paginated list (20 per page, "Show more" button) of relatively rare birds rece
 | Name | Common name (linked to eBird species page) followed by scientific name in italics in parentheses — e.g., `Varied Thrush (Ixoreus naevius)` |
 | Tags | One or more reason tags explaining why this bird is notable (see [Rarity Scoring](#rarity-scoring)). Omitted if no tags. |
 | Photos | Up to 3 thumbnails sourced from the checklists referenced by this entry. Each thumbnail links to its originating checklist. Omitted if no photos. |
-| Stats | `Last spotted: [date] ([distance] mi away, [location])` — e.g., `Last spotted: Today (8 mi away, Tilden Regional Park)` |
+| Stats | `Last spotted: [date] · [distance] mi away · [location]` — e.g., `Last spotted: Today · 8 mi away · Tilden Regional Park`. The location name is truncated with CSS ellipsis to prevent the line from wrapping. |
 | Your sightings | `You spotted: never`, `You spotted: 1 time`, or `You spotted: [N] times` — logged-in users only |
 | CTA | "Show recent sightings" link that expands the Species Detail section inline |
 
@@ -65,7 +65,7 @@ A loading skeleton is shown while data is fetched. Once loaded, the detail secti
 | Element | Content |
 |---------|---------|
 | Sighting count | `[N] sighting[s] nearby in the last [N] day[s]` — count of unique recent observation entries from the eBird per-species endpoint |
-| Checklists | All recent nearby checklists for this species, listed as: `[location name] · [relative date] · [X] mi away [📷 (N)]` — each location name links to the eBird checklist. If photos of this species were submitted with the checklist, a camera icon and count `📷 (N)` appear at the end, also linking to the checklist. Count is per-species (from `mediaCounts.P` in the eBird checklist view API). Omitted when no photos. |
+| Checklists | All recent nearby checklists for this species, listed as: `[date] · [X] mi away · [location name] [📷 (N)]` — each location name links to the eBird checklist. The location name is truncated with CSS ellipsis to prevent the line from wrapping. If photos of this species were submitted with the checklist, a camera icon and count `📷 (N)` appear at the end, also linking to the checklist. Count is per-species (from `mediaCounts.P` in the eBird checklist view API). Omitted when no photos. |
 
 "Hide" collapses the section.
 
@@ -100,31 +100,21 @@ Logged-in users see the same Birds for You list as logged-out users (see [All Us
 
 #### Life List Screen
 
-Two tabs:
-
-##### Tab A: "My Life List"
-
-Displays all bird species the user has observed in their lifetime, sourced from their uploaded CSV.
+Displays all bird species the user has observed in their lifetime, sourced from their uploaded CSV. Headline: **"Life List"**.
 
 **Data Source**: User-uploaded CSV from `https://ebird.org/lifelist?time=life&r=world`
 
 **Display Controls**:
-- **Sort options**: Taxonomic order (default), Date newest/oldest, Alphabetical A–Z / Z–A
+- **Sort options**: Date newest/oldest (default), Alphabetical A–Z / Z–A
 - **Search/filter**: Text search by species name
 - **Total count**: Display total species count prominently
 
 **Species Entry Display**:
-- Common name
-- Scientific name
-- Date last observed (most recent observation)
-- Location last observed (most recent observation)
-- Link to species page on eBird
 
-##### Tab B: "Birds for You"
-
-Same as the logged-out Birds for You (see [All Users](#1-all-users)), with the Lifer additions described above.
-
-**Empty State**: "No recommended birds nearby in the last 7 days. Try expanding your search radius!"
+| Line | Content |
+|------|---------|
+| Line 1 | `[Common Name] (Scientific name)` — e.g., `American Robin (Turdus migratorius)` |
+| Line 2 | `First spotted: [date] · [location]` — e.g., `First spotted: Mar 3, 2018 · Central Park, NY` |
 
 #### User Profile Settings
 
@@ -152,6 +142,7 @@ Used by both the logged-out and logged-in Birds for You. A species is scored by 
 | Lifer | 1000 (logged-in only) | Species not on the user's life list — the most valuable recommendation |
 | Notable (eBird rarity) | 500 | Species flagged as rare by eBird's regional rarity system |
 | Checklist notes | 150 | Species with observer-written descriptions or notes on the checklist (indicates likely rare/confirmed sighting) |
+| Last spotted | 150 | Proportional recency bonus: +150 for observations from today, scaling down to 0 for the oldest observation in the lookback window. Rewards very fresh sightings without a hard cutoff. |
 
 Signals stack — a species can score across multiple signals simultaneously. Results are sorted highest score first.
 
@@ -259,58 +250,22 @@ Each species entry displays one or more **reason tags**:
 └─────────────────────────────────────────┘
 ```
 
-### Screen: Life List (Tab A)
+### Screen: Life List
 
 ```
 ┌─────────────────────────────────────────┐
-│  🐦 My Birds                            │
-├─────────────────────────────────────────┤
-│  [My Life List]  [Birds for You]        │
+│  Life List                              │
 ├─────────────────────────────────────────┤
 │  Total Species: 342                     │
-│  [Search... 🔍]  Sort: [Taxonomic ▼]    │
+│  [Search... 🔍]  Sort: [Date newest ▼]  │
 ├─────────────────────────────────────────┤
 │  ┌─────────────────────────────────┐    │
-│  │ American Robin                  │    │
-│  │ Turdus migratorius              │    │
-│  │ Last seen: Feb 10, 2026         │    │
-│  │ 📍 Central Park, NY             │    │
+│  │ American Robin (Turdus          │    │
+│  │   migratorius)                  │    │
+│  │ First spotted: Mar 3, 2018 ·    │    │
+│  │   Central Park, NY              │    │
 │  └─────────────────────────────────┘    │
 │  ...                                    │
-└─────────────────────────────────────────┘
-```
-
-### Screen: Birds for You (Tab B, Logged-In)
-
-```
-┌─────────────────────────────────────────┐
-│  🐦 My Birds                            │
-├─────────────────────────────────────────┤
-│  [My Life List]  [Birds for You ●]      │
-├─────────────────────────────────────────┤
-│  📍 Oakland, CA • 10 mi radius          │
-│  Sort: [Score ▼]  Show: [7 days ▼]      │
-├─────────────────────────────────────────┤
-│  ┌─────────────────────────────────┐    │
-│  │ Varied Thrush (Ixoreus naevius) │    │
-│  │ 🏷 Lifer  🏷 Rare in this region │    │
-│  │ [photo] [photo]                 │    │
-│  │ Last spotted: Today             │    │
-│  │   (8 mi away, Tilden RP)        │    │
-│  │ You spotted: never              │    │
-│  │ Show recent sightings           │    │
-│  └─────────────────────────────────┘    │
-│  ┌─────────────────────────────────┐    │
-│  │ Lewis's Woodpecker              │    │
-│  │   (Melanerpes lewis)            │    │
-│  │ 🏷 Lifer  🏷 Checklist notes added│   │
-│  │ Last spotted: 2 days ago        │    │
-│  │   (22 mi away, Briones RP)      │    │
-│  │ You spotted: never              │    │
-│  │ Show recent sightings           │    │
-│  └─────────────────────────────────┘    │
-│  ...                                    │
-│  [Show more (8 remaining)]              │
 └─────────────────────────────────────────┘
 ```
 

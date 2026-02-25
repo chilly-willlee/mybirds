@@ -67,9 +67,7 @@ export function BirdCard({ bird, showUserStats = false, back = 7 }: BirdCardProp
   const distanceMi = Math.round(bird.distanceMiles);
 
   const primarySubId = bird.subId ?? bird.allSubIds[0];
-  const fillSubIds = (detail ? detail.checklists.map((cl) => cl.subId) : bird.allSubIds).filter(
-    (id) => id !== primarySubId,
-  );
+  const fillSubIds = bird.allSubIds.filter((id) => id !== primarySubId);
   const photoSubIds = primarySubId ? [primarySubId, ...fillSubIds] : fillSubIds;
 
   function handleShowDetails() {
@@ -119,8 +117,9 @@ export function BirdCard({ bird, showUserStats = false, back = 7 }: BirdCardProp
         <BirdPhotos subIds={photoSubIds} speciesCode={bird.speciesCode} />
 
         {/* Line 4: Stats */}
-        <p className="text-sm text-slate">
-          Last spotted: {formatRelativeDate(bird.obsDt)} · {distanceMi} mi away · {bird.locName}
+        <p className="flex text-sm text-slate min-w-0">
+          <span className="flex-shrink-0 whitespace-nowrap">Last spotted: {formatRelativeDate(bird.obsDt)} · {distanceMi} mi away ·</span>
+          <span className="truncate"> {bird.locName}</span>
         </p>
 
         {/* Line 5: Your sightings (logged-in only) */}
@@ -175,16 +174,13 @@ export function BirdCard({ bird, showUserStats = false, back = 7 }: BirdCardProp
                 {detail.checklists.length > 0 && (
                   <div className="space-y-1">
                     {detail.checklists.map((cl) => (
-                      <p key={cl.subId} className="text-sm text-slate flex items-center gap-1.5">
-                        {formatRelativeDate(cl.obsDt)}
-                        {" · "}
-                        {cl.distanceMiles} mi away
-                        {" · "}
+                      <p key={cl.subId} className="text-sm text-slate flex items-center min-w-0 gap-1.5">
+                        <span className="flex-shrink-0 whitespace-nowrap">{formatRelativeDate(cl.obsDt)} · {cl.distanceMiles} mi away · </span>
                         <a
                           href={`https://ebird.org/checklist/${cl.subId}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-forest hover:text-forest-light font-medium transition-colors"
+                          className="truncate text-forest hover:text-forest-light font-medium transition-colors"
                         >
                           {cl.locName}
                         </a>

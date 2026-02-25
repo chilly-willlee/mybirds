@@ -9,6 +9,7 @@ export interface NearbyObservationsParams {
   back?: number;
   maxResults?: number;
   hotspot?: boolean;
+  includeProvisional?: boolean;
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -32,6 +33,7 @@ function buildParams(params: NearbyObservationsParams): Record<string, string | 
   if (params.back !== undefined) result.back = clamp(params.back, 1, 30);
   if (params.maxResults !== undefined) result.maxResults = params.maxResults;
   if (params.hotspot !== undefined) result.hotspot = params.hotspot;
+  if (params.includeProvisional !== undefined) result.includeProvisional = params.includeProvisional;
 
   return result;
 }

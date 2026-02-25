@@ -107,6 +107,7 @@ export async function GET(request: NextRequest) {
     commentSpecies,
     userLat: lat,
     userLng: lng,
+    back,
   });
 
   return NextResponse.json(scored, {

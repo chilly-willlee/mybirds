@@ -5,7 +5,7 @@ import { getLifeList } from "@/lib/db/life-list";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 const QuerySchema = z.object({
-  sort: z.enum(["taxonomic", "date-asc", "date-desc", "alpha-asc", "alpha-desc"]).default("taxonomic"),
+  sort: z.enum(["date-asc", "date-desc", "alpha-asc", "alpha-desc"]).default("date-desc"),
   search: z.string().optional(),
 });
 
@@ -38,12 +38,14 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  const toTime = (d: string) => (d ? new Date(d).getTime() : 0);
+
   switch (parsed.data.sort) {
     case "date-asc":
-      species.sort((a, b) => (a.lastObservation.date || "").localeCompare(b.lastObservation.date || ""));
+      species.sort((a, b) => toTime(a.firstObservation.date) - toTime(b.firstObservation.date));
       break;
     case "date-desc":
-      species.sort((a, b) => (b.lastObservation.date || "").localeCompare(a.lastObservation.date || ""));
+      species.sort((a, b) => toTime(b.firstObservation.date) - toTime(a.firstObservation.date));
       break;
     case "alpha-asc":
       species.sort((a, b) => a.commonName.localeCompare(b.commonName));

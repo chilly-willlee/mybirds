@@ -42,7 +42,7 @@ export async function GET(
   const cacheKey = `species:${observationsCacheKey(lat, lng, distKm, back)}:${speciesCode}`;
   let obs = await cache.get<EBirdObservation[]>(cacheKey);
   if (!obs) {
-    obs = await getRecentNearbySpeciesObservations(client, speciesCode, { lat, lng, dist: distKm, back });
+    obs = await getRecentNearbySpeciesObservations(client, speciesCode, { lat, lng, dist: distKm, back, includeProvisional: true });
     await cache.set(cacheKey, obs, SPECIES_CACHE_TTL);
   }
 

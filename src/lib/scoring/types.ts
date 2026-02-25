@@ -26,4 +26,5 @@ export const SCORE_WEIGHTS = {
   LIFER: 1000,
   NOTABLE: 500,
   CHECKLIST_NOTES: 150,
+  LAST_SPOTTED: 150,
 } as const;

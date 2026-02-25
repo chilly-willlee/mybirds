@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { useLocation } from "@/contexts/location-context";
+import { GreatBlueHeron } from "@/components/icons/great-blue-heron";
 
 const navItems = [
   { href: "/", label: "Birds for You" },
@@ -25,8 +26,9 @@ export function Navigation() {
     <>
       {/* Desktop nav */}
       <nav className="hidden md:flex items-center justify-between px-6 py-3 bg-surface border-b border-gray-100">
-        <Link href="/" className="text-lg font-semibold text-forest">
-          New Birds
+        <Link href="/" className="flex items-center gap-2 text-forest">
+          <GreatBlueHeron size={22} />
+          <span className="text-lg font-semibold tracking-tight">New Birds</span>
         </Link>
         <div className="flex items-center gap-6">
           {navItems.map((item) => (

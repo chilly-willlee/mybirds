@@ -170,6 +170,53 @@ describe("scoreObservations", () => {
   });
 
 
+  describe("last spotted recency scoring", () => {
+    it("gives near-full 150 points for today's observation", () => {
+      const today = new Date().toISOString().slice(0, 10) + " 08:00";
+      const result = scoreObservations({
+        recentObs: [makeObs({ obsDt: today, sciName: "Ixoreus naevius" })],
+        notableObs: [],
+        lifeList: [makeLifeEntry({ scientificName: "Turdus migratorius" })],
+        userLat,
+        userLng,
+        back: 14,
+      });
+
+      expect(result[0].score).toBeGreaterThanOrEqual(1000 + 140);
+    });
+
+    it("gives 0 recency points beyond the lookback window", () => {
+      const oldDate = new Date(Date.now() - 8 * 24 * 60 * 60 * 1000);
+      const oldDt = oldDate.toISOString().slice(0, 10) + " 08:00";
+      const result = scoreObservations({
+        recentObs: [makeObs({ obsDt: oldDt, sciName: "Turdus migratorius" })],
+        notableObs: [],
+        lifeList: [makeLifeEntry({ scientificName: "Turdus migratorius" })],
+        userLat,
+        userLng,
+        back: 7,
+      });
+
+      expect(result[0].score).toBe(0);
+    });
+
+    it("gives proportional score for a mid-window observation", () => {
+      const midDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const midDt = midDate.toISOString().slice(0, 10) + " 08:00";
+      const result = scoreObservations({
+        recentObs: [makeObs({ obsDt: midDt, sciName: "Turdus migratorius" })],
+        notableObs: [],
+        lifeList: [makeLifeEntry({ scientificName: "Turdus migratorius" })],
+        userLat,
+        userLng,
+        back: 14,
+      });
+
+      expect(result[0].score).toBeGreaterThan(50);
+      expect(result[0].score).toBeLessThan(100);
+    });
+  });
+
   it("populates allSubIds sorted most recent first", () => {
     const result = scoreObservations({
       recentObs: [

@@ -2,12 +2,14 @@
 
 @theme {
   --color-forest: #2D5A3D;
-  --color-forest-light: #3A7A52;
+  --color-forest-light: #3D7A54;
   --color-sky: #5BA4D9;
   --color-golden: #F4B942;
   --color-golden-light: #FDF0D0;
+  --color-sage: #E8F0EA;
   --color-warm-white: #FAF9F7;
   --color-surface: #FFFFFF;
   --color-charcoal: #2C3E40;
   --color-slate: #6B7C7E;
+  --color-border: #E8EAE9;
 }

@@ -1,20 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 
-interface SpeciesPhoto {
+interface ChecklistPhoto {
   assetId: string;
-  checklistId: string;
+  speciesCode: string;
 }
 
 interface CacheEntry {
-  photos: SpeciesPhoto[];
+  photos: ChecklistPhoto[];
   expiresAt: number;
 }
 
-const speciesPhotoCache = new Map<string, CacheEntry>();
-const CACHE_TTL_MS = 60 * 60 * 1000;
+const checklistPhotoCache = new Map<string, CacheEntry>();
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
-async function fetchSpeciesPhotos(speciesCode: string): Promise<SpeciesPhoto[]> {
-  const url = `https://search.macaulaylibrary.org/api/v1/search?taxonCode=${speciesCode}&mediaType=Photo&count=100&sort=upload_date_desc`;
+async function fetchChecklistPhotos(subId: string): Promise<ChecklistPhoto[]> {
+  const url = `https://search.macaulaylibrary.org/api/v1/search?subId=${subId}&mediaType=Photo`;
   const resp = await fetch(url, {
     headers: { "User-Agent": "NewBirds/1.0 (https://github.com/new-birds)" },
     signal: AbortSignal.timeout(5000),
@@ -26,10 +26,10 @@ async function fetchSpeciesPhotos(speciesCode: string): Promise<SpeciesPhoto[]> 
   const content: Record<string, unknown>[] = data?.results?.content ?? [];
 
   return content
-    .filter((item) => item.assetId && item.eBirdChecklistId)
+    .filter((item) => item.assetId && item.speciesCode)
     .map((item) => ({
       assetId: item.assetId as string,
-      checklistId: item.eBirdChecklistId as string,
+      speciesCode: item.speciesCode as string,
     }));
 }
 
@@ -44,23 +44,30 @@ export async function GET(request: NextRequest) {
   const subIds = subIdsParam.split(",").filter(Boolean);
   const now = Date.now();
 
-  let cached = speciesPhotoCache.get(speciesCode);
-  if (!cached || cached.expiresAt <= now) {
-    try {
-      const fetched = await fetchSpeciesPhotos(speciesCode);
-      cached = { photos: fetched, expiresAt: now + CACHE_TTL_MS };
-      speciesPhotoCache.set(speciesCode, cached);
-    } catch {
-      return NextResponse.json({ photos: [] });
-    }
-  }
+  const candidates: { assetId: string; checklistId: string; priority: number }[] = [];
 
-  const subIdSet = new Set(subIds);
-  const subIdOrder = new Map(subIds.map((id, i) => [id, i]));
+  await Promise.all(
+    subIds.map(async (subId, index) => {
+      let cached = checklistPhotoCache.get(subId);
+      if (!cached || cached.expiresAt <= now) {
+        try {
+          const fetched = await fetchChecklistPhotos(subId);
+          cached = { photos: fetched, expiresAt: now + CACHE_TTL_MS };
+          checklistPhotoCache.set(subId, cached);
+        } catch {
+          return;
+        }
+      }
+      for (const photo of cached.photos) {
+        if (photo.speciesCode === speciesCode) {
+          candidates.push({ assetId: photo.assetId, checklistId: subId, priority: index });
+        }
+      }
+    }),
+  );
 
-  const photos = cached.photos
-    .filter((p) => subIdSet.has(p.checklistId))
-    .sort((a, b) => (subIdOrder.get(a.checklistId) ?? 999) - (subIdOrder.get(b.checklistId) ?? 999))
+  const photos = candidates
+    .sort((a, b) => a.priority - b.priority)
     .slice(0, 3)
     .map((p) => ({
       url: `https://cdn.download.ams.birds.cornell.edu/api/v1/asset/${p.assetId}/320`,
