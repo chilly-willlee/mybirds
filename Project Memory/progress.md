@@ -33,30 +33,35 @@
 - **Per-species API**: Recent sightings detail with checklist list + photo counts (`/api/birds/species/[speciesCode]`)
 
 ### Beta v0.1 Polish (complete)
-- **Two-CSV Life List upload**: "Upload CSV: [First Seen] [Last Seen]" — two distinct buttons; each uploads to the correct DB columns. Import status lines show per-type species count + date.
+- **Two-CSV Life List upload**: "Upload CSV: [First Seen] [Last Seen]" — two distinct buttons; each uploads to the correct DB columns.
 - **Date mode toggle**: `[First Seen | Last Seen]` segmented control; greyed + tooltip when type not uploaded. Fallback to available date if selected mode has no data.
 - **Life List filtering**: Non-species entries (slash, spuh, hybrid) excluded at parse time.
 - **observationCount semantics**: Life List CSV = 0 (unknown); My Data CSV = checklist row count. "Seen N times" hidden when count is 0.
 - **Relative timestamps**: "Just now" (< 1h), "X hours ago" (< 24h), "Yesterday", "X days ago", or short date.
-- **Verbiage**: "Last spotted" → "Last seen"; "You spotted" → "You've seen".
-- **Hover underlines**: All text links underline on hover (Life List + Birds for You).
+- **Hover underlines**: All text links underline on hover.
 - **Logo mark hidden**: Nav wordmark only.
 
 **Total: 120 tests, all passing. Build succeeds.**
 
-### Rebranding (complete)
-- App name: "New Birds" → **"My Birds"** (mybirds.app)
-- "Birds for You" → **"Birds for Me"** (nav + page heading)
-- Caption updated: "Interesting birds spotted nearby recently"
-- "You've seen" → **"I've seen"** on bird cards
-- `AUTH_URL` updated to https://mybirds.app in Vercel production
+### Post-Beta Polish (complete)
+- **Rebranding**: App name "New Birds" → **"My Birds"**; domain mybirds.app; "Birds for You" → "Birds for Me"; "I've seen" on bird cards; page title updated.
+- **Birds for Me layout**: Header + "Interesting birds seen nearby" caption shown for all users (logged-out + in). CTA card ("Discover your next lifer") moved to below species list.
+- **Life List — logged-out**: Shows "Discover your next lifer" CTA instead of redirecting to sign-in.
+- **Life List — import status**: Condensed to a single line: `First-seen list uploaded on [date] · Last-seen uploaded on [date]`.
+- **Life List — upload buttons**: Per-button loading state (only the pressed button shows spinner).
+- **Life List — download link**: Renamed to "Download CSV from eBird ↗".
+- **Life List — photos removed**: "Show photos" toggle removed from species cards.
+- **Domain**: mybirds.app and www.mybirds.app live on Vercel (Porkbun DNS: ALIAS + CNAME www → cname.vercel-dns.com); `AUTH_URL` and `AUTH_EMAIL_FROM` (`My Birds <noreply@mybirds.app>`) set in production. Resend domain verified.
+- **App icon**: Flying heron silhouette (golden on forest green) — `src/app/icon.svg`; auto-used by Next.js App Router as browser tab icon.
+- **GitHub**: Source at https://github.com/chilly-willlee/mybirds (all commits pushed).
 
 ## What's Next
 - Monitor production for bugs from real usage
 - Gather beta feedback
-- Add DNS A record in Porkbun: `A mybirds.app 76.76.21.21` (pending user action)
+- Await Google Safe Browsing review (review request submitted; Chrome shows "Dangerous site" for new domain)
 
 ## Known Issues
 - Rate limiter is in-memory (resets on server restart); fine for MVP
 - Photos API depends on undocumented Macaulay Library search endpoint; may break if API changes
 - `mergeLastSeenData` uses explicit SELECT → UPDATE → INSERT (not `onConflictDoUpdate`) due to Drizzle ORM requiring a unique CONSTRAINT (not just `uniqueIndex`) for conflict resolution
+- Chrome shows "Dangerous site" warning for mybirds.app (Google Safe Browsing false positive on new domain; review submitted)

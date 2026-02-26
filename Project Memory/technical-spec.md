@@ -14,6 +14,7 @@
 | ORM | Drizzle ORM | Type-safe queries, lightweight, works well with Neon |
 | Auth | Auth.js v5 + Resend | Magic link (passwordless), Drizzle adapter |
 | Deployment | Vercel | Zero-config Next.js deploy; production at https://mybirds.app (alias: https://new-birds.vercel.app) |
+| Version Control | GitHub | https://github.com/chilly-willlee/mybirds |
 
 ## Architecture
 
@@ -63,9 +64,11 @@ src/lib/db/
 ### Auth
 
 ```
-src/lib/auth.ts      — Auth.js v5 config (Drizzle adapter + Resend email provider)
-src/middleware.ts    — Route protection (/lifelist, /settings)
+src/lib/auth.ts           — Auth.js v5 config (Drizzle adapter + Resend email provider)
+src/lib/auth-helpers.ts   — getRequiredSession() (redirects to /auth/signin), getOptionalSession()
 ```
+
+Note: no middleware.ts; route protection is handled at the page level via `getRequiredSession()`. The `/lifelist` route shows a CTA for logged-out users rather than redirecting.
 
 ### API Routes (Next.js Route Handlers)
 
@@ -132,7 +135,7 @@ Lat/lng rounded to 2 decimal places (~1.1km) to increase cache hit rate.
 - CSV upload: content-type validation, 10MB max, server-side parsing
 - API route rate limiting: 30 req/min per IP (in-memory, resets on restart)
 - All inputs validated with Zod at system boundaries
-- Auth middleware protects `/settings`, `/lifelist` routes
+- `/settings` protected via `getRequiredSession()` (redirects to sign-in); `/lifelist` shows CTA for logged-out users
 
 ### Species Matching
 - Match by **scientific name** (universal across locales), not common name
