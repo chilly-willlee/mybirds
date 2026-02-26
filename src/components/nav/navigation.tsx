@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 
 const navItems = [
-  { href: "/", label: "Birds for You" },
+  { href: "/", label: "Birds for Me" },
   { href: "/lifelist", label: "Life List" },
 ];
 
@@ -23,7 +23,7 @@ export function Navigation() {
       {/* Desktop nav */}
       <nav className="hidden md:flex items-center justify-between px-6 py-3 bg-surface border-b border-gray-100">
         <Link href="/" className="flex items-center gap-2 text-forest">
-          <span className="text-lg font-semibold tracking-tight">New Birds</span>
+          <span className="text-lg font-semibold tracking-tight">My Birds</span>
         </Link>
         <div className="flex items-center gap-6">
           {navItems.map((item) => (

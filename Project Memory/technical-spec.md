@@ -13,7 +13,7 @@
 | Database | Neon PostgreSQL (serverless) | Serverless-compatible, no connection pooling needed |
 | ORM | Drizzle ORM | Type-safe queries, lightweight, works well with Neon |
 | Auth | Auth.js v5 + Resend | Magic link (passwordless), Drizzle adapter |
-| Deployment | Vercel | Zero-config Next.js deploy; production at https://new-birds.vercel.app |
+| Deployment | Vercel | Zero-config Next.js deploy; production at https://mybirds.app (alias: https://new-birds.vercel.app) |
 
 ## Architecture
 

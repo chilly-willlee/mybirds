@@ -52,66 +52,6 @@ function LocationLink({ locationId, location }: { locationId?: string; location:
   );
 }
 
-function LifeListPhotos({ checklistId, speciesCode }: { checklistId: string; speciesCode: string }) {
-  const [shown, setShown] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [photos, setPhotos] = useState<{ url: string; checklistUrl: string }[] | null>(null);
-
-  function handleToggle() {
-    if (shown) {
-      setShown(false);
-      return;
-    }
-    setShown(true);
-    if (photos === null) {
-      setLoading(true);
-      fetch(`/api/birds/photos?subIds=${checklistId}&speciesCode=${speciesCode}`)
-        .then((r) => (r.ok ? r.json() : { photos: [] }))
-        .then((data) => setPhotos(data.photos ?? []))
-        .finally(() => setLoading(false));
-    }
-  }
-
-  return (
-    <div className="mt-1.5">
-      <button
-        onClick={handleToggle}
-        className="text-xs text-forest hover:text-forest-light font-medium transition-colors"
-      >
-        {shown ? "Hide photos" : "📷 Show photos"}
-      </button>
-      {shown && (
-        <div className="mt-1.5">
-          {loading ? (
-            <div className="flex gap-2">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="w-20 h-20 bg-gray-200 rounded-lg animate-pulse" />
-              ))}
-            </div>
-          ) : photos && photos.length > 0 ? (
-            <div className="flex gap-2">
-              {photos.map((photo, i) => (
-                <a key={i} href={photo.checklistUrl} target="_blank" rel="noopener noreferrer">
-                  <img
-                    src={photo.url}
-                    alt=""
-                    className="w-20 h-20 object-cover rounded-lg border border-gray-100"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = "none";
-                    }}
-                  />
-                </a>
-              ))}
-            </div>
-          ) : (
-            <p className="text-xs text-slate">No photos found for this checklist.</p>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
 export function MyLifeList() {
   const [species, setSpecies] = useState<LifeListEntry[]>([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -123,7 +63,7 @@ export function MyLifeList() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pendingUploadType = useRef<UploadType>("first-seen");
-  const [uploading, setUploading] = useState(false);
+  const [uploadingType, setUploadingType] = useState<UploadType | null>(null);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
 
   const hasFirstSeen = !!importStatus.firstSeen;
@@ -157,7 +97,7 @@ export function MyLifeList() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setUploading(true);
+    setUploadingType(pendingUploadType.current);
     setUploadStatus(null);
 
     const formData = new FormData();
@@ -177,7 +117,7 @@ export function MyLifeList() {
     } catch {
       setUploadStatus("Upload failed. Please try again.");
     } finally {
-      setUploading(false);
+      setUploadingType(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   }
@@ -199,7 +139,7 @@ export function MyLifeList() {
         <span className="text-sm text-slate">Upload CSV:</span>
         <Button
           onClick={() => { pendingUploadType.current = "first-seen"; fileInputRef.current?.click(); }}
-          loading={uploading}
+          loading={uploadingType === "first-seen"}
           variant="secondary"
           size="sm"
         >
@@ -207,7 +147,7 @@ export function MyLifeList() {
         </Button>
         <Button
           onClick={() => { pendingUploadType.current = "last-seen"; fileInputRef.current?.click(); }}
-          loading={uploading}
+          loading={uploadingType === "last-seen"}
           variant="secondary"
           size="sm"
         >
@@ -219,25 +159,19 @@ export function MyLifeList() {
           rel="noopener noreferrer"
           className="text-sm text-forest hover:text-forest-light transition-colors whitespace-nowrap"
         >
-          Download from eBird ↗
+          Download CSV from eBird ↗
         </a>
       </div>
 
-      {/* Import status lines */}
-      <div className="text-xs text-slate space-y-0.5">
-        <p>
-          First seen:{" "}
-          {importStatus.firstSeen
-            ? `${importStatus.firstSeen.speciesCount} species · ${formatDate(importStatus.firstSeen.importedAt)}`
-            : "not uploaded"}
+      {/* Import status line */}
+      {(importStatus.firstSeen || importStatus.lastSeen) && (
+        <p className="text-xs text-slate">
+          {[
+            importStatus.firstSeen && `First-seen list uploaded on ${formatDate(importStatus.firstSeen.importedAt)}`,
+            importStatus.lastSeen && `Last-seen uploaded on ${formatDate(importStatus.lastSeen.importedAt)}`,
+          ].filter(Boolean).join(" · ")}
         </p>
-        <p>
-          Last seen:{" "}
-          {importStatus.lastSeen
-            ? `${importStatus.lastSeen.speciesCount} species · ${formatDate(importStatus.lastSeen.importedAt)}`
-            : "not uploaded"}
-        </p>
-      </div>
+      )}
 
       {uploadStatus && (
         <p className={`text-sm ${uploadStatus.startsWith("Error") ? "text-red-600" : "text-forest"}`}>
@@ -319,12 +253,10 @@ export function MyLifeList() {
           {species.map((s) => {
             const firstObs = s.firstObservation;
             const lastObs = s.lastObservation;
-            // Fallback: if selected mode has no date, use the other
             const obs =
               dateMode === "last"
                 ? lastObs.date ? lastObs : firstObs
                 : firstObs.date ? firstObs : lastObs;
-            const canShowPhotos = !!(s.speciesCode && lastObs.checklistId);
 
             return (
               <Card key={s.scientificName} className="py-3">
@@ -366,13 +298,6 @@ export function MyLifeList() {
                   {" · "}
                   <LocationLink locationId={obs.locationId} location={obs.location} />
                 </p>
-
-                {canShowPhotos && (
-                  <LifeListPhotos
-                    checklistId={lastObs.checklistId}
-                    speciesCode={s.speciesCode!}
-                  />
-                )}
               </Card>
             );
           })}

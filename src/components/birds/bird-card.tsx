@@ -128,10 +128,10 @@ export function BirdCard({ bird, showUserStats = false, back = 7 }: BirdCardProp
         {showUserStats && (
           <p className="text-sm text-slate">
             {bird.userObservationCount === 0
-              ? "You've seen: never"
+              ? "I've seen: never"
               : bird.userObservationCount === 1
-              ? "You've seen: 1 time"
-              : `You've seen: ${bird.userObservationCount} times`}
+              ? "I've seen: 1 time"
+              : `I've seen: ${bird.userObservationCount} times`}
           </p>
         )}
 

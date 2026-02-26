@@ -1,8 +1,8 @@
-# New Birds — Product Specification (MVP)
+# My Birds — Product Specification (MVP)
 
 ## Overview
 
-**New Birds** is a web application that helps birders discover bird species they haven't seen yet by surfacing recent nearby sightings. Users import their eBird life list via CSV, and the app compares it against local sightings to highlight new birding opportunities.
+**My Birds** is a web application that helps birders discover bird species they haven't seen yet by surfacing recent nearby sightings. Users import their eBird life list via CSV, and the app compares it against local sightings to highlight new birding opportunities.
 
 ---
 
@@ -36,7 +36,7 @@ Birders maintaining life lists often miss opportunities to spot new species beca
 
 Features in this section are shared between logged-out visitors and logged-in users.
 
-#### Birds for You
+#### Birds for Me
 
 A paginated list (20 per page, "Show more" button) of relatively rare birds recently sighted near the user's location. Location is determined via browser geolocation (with a prompt) or by ZIP code.
 
@@ -59,7 +59,7 @@ A paginated list (20 per page, "Show more" button) of relatively rare birds rece
 | Tags | One or more reason tags explaining why this bird is notable (see [Rarity Scoring](#rarity-scoring)). Omitted if no tags. |
 | Photos | Up to 3 thumbnails sourced from the checklists referenced by this entry. Each thumbnail links to its originating checklist. Omitted if no photos. |
 | Stats | `Last seen: [relative time] · [distance] mi away · [location]` — e.g., `Last seen: 3 hours ago · 8 mi away · Tilden Regional Park`. Relative time: "Just now" (< 1h), "X hours ago" (< 24h), "Yesterday", "X days ago" (< 7d), or short date. Location name is truncated with CSS ellipsis to prevent the line from wrapping. |
-| Your sightings | `You've seen: never`, `You've seen: 1 time`, or `You've seen: [N] times` — logged-in users only |
+| My sightings | `I've seen: never`, `I've seen: 1 time`, or `I've seen: [N] times` — logged-in users only |
 | CTA | "Show recent sightings" link that expands the Species Detail section inline |
 
 **Species Detail** (inline, below the card entry, loaded on demand):
@@ -77,12 +77,12 @@ A loading skeleton is shown while data is fetched. Once loaded, the detail secti
 
 Visitors who have not signed in see a curated landing experience designed to showcase the app's value and encourage sign-up.
 
-The logged-out landing page displays the Birds for You list (see [All Users](#1-all-users)) alongside CTAs to sign up.
+The logged-out landing page displays the Birds for Me list (see [All Users](#1-all-users)) alongside CTAs to sign up.
 
 **Call to Action**:
 - Prominent CTA: "Sign up to import your life list and see which of these you haven't spotted yet"
 - Secondary CTA: "See your full life list and discover new birds nearby"
-- CTA appears at the top and bottom of the Birds for You list
+- CTA appears at the top and bottom of the Birds for Me list
 
 ### 3. Authentication
 
@@ -92,15 +92,15 @@ The logged-out landing page displays the Birds for You list (see [All Users](#1-
 
 ### 4. Logged-In Mode
 
-#### Birds for You (Logged-In)
+#### Birds for Me (Logged-In)
 
-Logged-in users see the same Birds for You list as logged-out users (see [All Users](#1-all-users)), with one addition: species not on the user's life list are tagged as **"Lifer"** and receive the highest rarity score weight. The display also shows how many times the logged-in user has personally observed each species.
+Logged-in users see the same Birds for Me list as logged-out users (see [All Users](#1-all-users)), with one addition: species not on the user's life list are tagged as **"Lifer"** and receive the highest rarity score weight. The display also shows how many times the logged-in user has personally observed each species.
 
 **Additional Species Entry Lines (Logged-In)**:
 | Line | Content |
 |------|---------|
 | Lifer tag | "Lifer" reason tag added to the tags line if species is not on the user's life list |
-| Your sightings | `You've seen: never`, `You've seen: 1 time`, or `You've seen: [N] times` — displayed between the stats line and the "Show details" CTA |
+| My sightings | `I've seen: never`, `I've seen: 1 time`, or `I've seen: [N] times` — displayed between the stats line and the "Show details" CTA |
 
 #### Life List Screen
 
@@ -191,7 +191,7 @@ Each species entry displays one or more **reason tags**:
 
 ```
 ┌─────────────────────────────────────────┐
-│  🐦 New Birds                 [Sign in] │
+│  My Birds                     [Sign in] │
 ├─────────────────────────────────────────┤
 │                                         │
 │  ┌─────────────────────────────────┐    │
@@ -199,7 +199,7 @@ Each species entry displays one or more **reason tags**:
 │  │ [Sign up with email →]          │    │
 │  └─────────────────────────────────┘    │
 │                                         │
-│  BIRDS FOR YOU                          │
+│  BIRDS FOR ME                           │
 │                                         │
 │  [📍 My Location] [ZIP: _____ Go]       │  ← location bar (mobile: 2 rows)
 │  [══════●══════════════════] 10 mi      │  ← tablet/desktop: same row as above
@@ -280,7 +280,8 @@ Tablet/desktop — controls on one row:
 ## Branding Direction
 
 ### Name & Tagline
-- **Name**: New Birds
+- **Name**: My Birds
+- **Domain**: mybirds.app
 - **Tagline**: "Discover your next lifer"
 
 ### Color Palette
@@ -438,5 +439,5 @@ The following features are deferred to future releases:
 
 ---
 
-*Document Version: 3.1 (Beta v0.1)*
+*Document Version: 3.2 (Beta v0.1)*
 *Last Updated: February 2026*

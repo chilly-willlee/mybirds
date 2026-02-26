@@ -1,7 +1,7 @@
 # Progress
 
 ## Current Status
-**Phase**: Beta v0.1 — deployed to production at https://new-birds.vercel.app
+**Phase**: Beta v0.1 — deployed to production at https://mybirds.app (alias: https://new-birds.vercel.app)
 
 ## What's Done
 
@@ -44,9 +44,17 @@
 
 **Total: 120 tests, all passing. Build succeeds.**
 
+### Rebranding (complete)
+- App name: "New Birds" → **"My Birds"** (mybirds.app)
+- "Birds for You" → **"Birds for Me"** (nav + page heading)
+- Caption updated: "Interesting birds spotted nearby recently"
+- "You've seen" → **"I've seen"** on bird cards
+- `AUTH_URL` updated to https://mybirds.app in Vercel production
+
 ## What's Next
 - Monitor production for bugs from real usage
 - Gather beta feedback
+- Add DNS A record in Porkbun: `A mybirds.app 76.76.21.21` (pending user action)
 
 ## Known Issues
 - Rate limiter is in-memory (resets on server restart); fine for MVP
