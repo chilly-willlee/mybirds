@@ -8,13 +8,15 @@ interface ScoreInput {
   notableObs: EBirdObservation[];
   lifeList?: LifeListEntry[];
   commentSpecies?: Set<string>;
+  mediaSpecies?: Set<string>;
+  checklistSpeciesSubIds?: Map<string, Map<string, string>>;
   userLat: number;
   userLng: number;
   back?: number;
 }
 
 export function scoreObservations(input: ScoreInput): ScoredObservation[] {
-  const { recentObs, notableObs, lifeList, commentSpecies, userLat, userLng, back = 14 } = input;
+  const { recentObs, notableObs, lifeList, commentSpecies, mediaSpecies, checklistSpeciesSubIds, userLat, userLng, back = 14 } = input;
 
   const notableSet = new Set(notableObs.map((o) => o.speciesCode));
 
@@ -41,6 +43,20 @@ export function scoreObservations(input: ScoreInput): ScoredObservation[] {
     }
   }
 
+  // Supplement speciesSubIdDates with subIds found in fetched checklists.
+  // This captures non-notable species (e.g. Peregrine Falcon) that share a checklist
+  // with a notable species — their subId would otherwise never be associated with them.
+  if (checklistSpeciesSubIds) {
+    for (const [speciesCode, subIdDates] of checklistSpeciesSubIds) {
+      if (!speciesMap.has(speciesCode)) continue;
+      const subIdMap = speciesSubIdDates.get(speciesCode) ?? new Map<string, string>();
+      for (const [subId, obsDt] of subIdDates) {
+        if (!subIdMap.has(subId)) subIdMap.set(subId, obsDt);
+      }
+      speciesSubIdDates.set(speciesCode, subIdMap);
+    }
+  }
+
   const scored: ScoredObservation[] = [];
 
   for (const [speciesCode, obs] of speciesMap) {
@@ -56,6 +72,11 @@ export function scoreObservations(input: ScoreInput): ScoredObservation[] {
     if (notableSet.has(speciesCode)) {
       score += SCORE_WEIGHTS.NOTABLE;
       reasons.push({ type: "notable" });
+    }
+
+    if (mediaSpecies?.has(speciesCode)) {
+      score += SCORE_WEIGHTS.MEDIA;
+      reasons.push({ type: "media" });
     }
 
     if (commentSpecies?.has(speciesCode)) {
@@ -124,6 +145,8 @@ export function formatReasonTag(tag: ReasonTag): string {
       return "Lifer";
     case "notable":
       return "Rare in this region";
+    case "media":
+      return "Media added";
     case "checklist-notes":
       return "Checklist notes added";
   }

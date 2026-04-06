@@ -16,24 +16,31 @@ const QuerySchema = z.object({
   lng: z.coerce.number().min(-180).max(180),
   radiusMiles: z.coerce.number().min(1).max(25).default(10),
   back: z.coerce.number().min(1).max(30).default(14),
+  search: z.string().optional(),
 });
 
-const MAX_CHECKLIST_FETCHES = 50;
+const MAX_CHECKLIST_FETCHES = 200;
 
-async function buildCommentSpecies(
+async function buildChecklistData(
   recentObs: EBirdObservation[],
   notableObs: EBirdObservation[],
   client: ReturnType<typeof getEBirdClient>,
   cache: ReturnType<typeof getCache>,
-): Promise<Set<string>> {
-  const recentSubIds = recentObs.flatMap((o) => (o.subId ? [o.subId] : []));
+): Promise<{ commentSpecies: Set<string>; mediaSpecies: Set<string>; checklistSpeciesSubIds: Map<string, Map<string, string>> }> {
+  // Notable subIds first — those checklists are most valuable for scoring.
+  // Recent subIds fill remaining slots up to the cap.
   const notableSubIds = notableObs.flatMap((o) => (o.subId ? [o.subId] : []));
-  const uniqueSubIds = Array.from(new Set([...recentSubIds, ...notableSubIds])).slice(
+  const recentSubIds = recentObs.flatMap((o) => (o.subId ? [o.subId] : []));
+  const uniqueSubIds = Array.from(new Set([...notableSubIds, ...recentSubIds])).slice(
     0,
     MAX_CHECKLIST_FETCHES,
   );
 
   const commentSpecies = new Set<string>();
+  const mediaSpecies = new Set<string>();
+  // Maps speciesCode → (subId → obsDt) for every species found in fetched checklists.
+  // Allows non-notable species to inherit subIds from checklists they share with notable species.
+  const checklistSpeciesSubIds = new Map<string, Map<string, string>>();
 
   await Promise.all(
     uniqueSubIds.map(async (subId) => {
@@ -48,14 +55,18 @@ async function buildCommentSpecies(
         }
       }
       for (const obs of checklist.obs) {
-        if (obs.comments) {
-          commentSpecies.add(obs.speciesCode);
+        if (obs.comments) commentSpecies.add(obs.speciesCode);
+        if (obs.mediaCounts && Object.values(obs.mediaCounts).some((n) => n > 0)) {
+          mediaSpecies.add(obs.speciesCode);
         }
+        const subIdMap = checklistSpeciesSubIds.get(obs.speciesCode) ?? new Map<string, string>();
+        subIdMap.set(subId, checklist.obsDt);
+        checklistSpeciesSubIds.set(obs.speciesCode, subIdMap);
       }
     }),
   );
 
-  return commentSpecies;
+  return { commentSpecies, mediaSpecies, checklistSpeciesSubIds };
 }
 
 export async function GET(request: NextRequest) {
@@ -74,7 +85,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const { lat, lng, radiusMiles, back } = parsed.data;
+  const { lat, lng, radiusMiles, back, search } = parsed.data;
   const distKm = Math.round(milesToKm(radiusMiles));
   const client = getEBirdClient();
   const cache = getCache();
@@ -93,9 +104,9 @@ export async function GET(request: NextRequest) {
     await cache.set(notKey, notableObs, CACHE_TTL.notable);
   }
 
-  const [session, commentSpecies] = await Promise.all([
+  const [session, { commentSpecies, mediaSpecies, checklistSpeciesSubIds }] = await Promise.all([
     auth(),
-    buildCommentSpecies(recentObs, notableObs, client, cache),
+    buildChecklistData(recentObs, notableObs, client, cache),
   ]);
 
   const lifeList = session?.user?.id ? await getLifeList(session.user.id) : undefined;
@@ -105,12 +116,21 @@ export async function GET(request: NextRequest) {
     notableObs,
     lifeList: lifeList?.length ? lifeList : undefined,
     commentSpecies,
+    mediaSpecies,
+    checklistSpeciesSubIds,
     userLat: lat,
     userLng: lng,
     back,
   });
 
-  return NextResponse.json(scored, {
+  const results = search
+    ? scored.filter((b) => {
+        const q = search.toLowerCase();
+        return b.comName.toLowerCase().includes(q) || b.sciName.toLowerCase().includes(q);
+      })
+    : scored;
+
+  return NextResponse.json(results, {
     headers: { "X-RateLimit-Remaining": String(remaining) },
   });
 }

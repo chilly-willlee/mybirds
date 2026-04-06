@@ -20,11 +20,13 @@ export interface ScoredObservation {
 export type ReasonTag =
   | { type: "lifer" }
   | { type: "notable" }
+  | { type: "media" }
   | { type: "checklist-notes" };
 
 export const SCORE_WEIGHTS = {
   LIFER: 1000,
   NOTABLE: 500,
+  MEDIA: 300,
   CHECKLIST_NOTES: 150,
   LAST_SPOTTED: 150,
 } as const;

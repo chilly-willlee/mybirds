@@ -4,6 +4,7 @@ import { formatReasonTag } from "@/lib/scoring/rarity";
 const tagStyles: Record<ReasonTag["type"], string> = {
   lifer: "bg-golden text-charcoal",
   notable: "bg-sky text-white",
+  media: "bg-violet-100 text-violet-800",
   "checklist-notes": "bg-sage text-forest",
 };
 

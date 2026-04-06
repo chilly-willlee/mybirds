@@ -90,6 +90,31 @@ describe("scoreObservations", () => {
     expect(result[0].reasons.every((r) => r.type !== "checklist-notes")).toBe(true);
   });
 
+  it("gives 300 points for media species", () => {
+    const result = scoreObservations({
+      recentObs: [makeObs()],
+      notableObs: [],
+      lifeList: [makeLifeEntry({ scientificName: "Ixoreus naevius" })],
+      mediaSpecies: new Set(["varthr"]),
+      userLat,
+      userLng,
+    });
+
+    expect(result[0].reasons).toContainEqual({ type: "media" });
+    expect(result[0].score).toBeGreaterThanOrEqual(300);
+  });
+
+  it("does not add media tag when species not in mediaSpecies", () => {
+    const result = scoreObservations({
+      recentObs: [makeObs()],
+      notableObs: [],
+      userLat,
+      userLng,
+    });
+
+    expect(result[0].reasons.every((r) => r.type !== "media")).toBe(true);
+  });
+
   it("stacks multiple reasons", () => {
     const obs = makeObs({ sciName: "Ixoreus naevius" });
     const result = scoreObservations({
@@ -268,5 +293,9 @@ describe("formatReasonTag", () => {
 
   it("formats checklist-notes", () => {
     expect(formatReasonTag({ type: "checklist-notes" })).toBe("Checklist notes added");
+  });
+
+  it("formats media", () => {
+    expect(formatReasonTag({ type: "media" })).toBe("Media added");
   });
 });

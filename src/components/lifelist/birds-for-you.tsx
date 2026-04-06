@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "@/contexts/location-context";
 import { BirdCard } from "@/components/birds/bird-card";
+import { Button } from "@/components/ui/button";
 import type { ScoredObservation } from "@/lib/scoring/types";
 
 type SortOption = "score" | "distance" | "date" | "alpha";
@@ -16,17 +17,28 @@ export function BirdsForYou() {
   const [sort, setSort] = useState<SortOption>("score");
   const [back, setBack] = useState(7);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [search, setSearch] = useState("");
+  const [activeSearch, setActiveSearch] = useState("");
 
   useEffect(() => {
     if (lat === null || lng === null) return;
 
     setLoading(true);
     setVisibleCount(PAGE_SIZE);
-    fetch(`/api/birds/scored?lat=${lat}&lng=${lng}&radiusMiles=${radiusMiles}&back=${back}`)
+
+    const params = new URLSearchParams({
+      lat: String(lat),
+      lng: String(lng),
+      radiusMiles: String(radiusMiles),
+      back: String(back),
+    });
+    if (activeSearch) params.set("search", activeSearch);
+
+    fetch(`/api/birds/scored?${params}`)
       .then((r) => r.json())
       .then((data) => setBirds(Array.isArray(data) ? data : []))
       .finally(() => setLoading(false));
-  }, [lat, lng, radiusMiles, back]);
+  }, [lat, lng, radiusMiles, back, activeSearch]);
 
   const sorted = [...birds].sort((a, b) => {
     switch (sort) {
@@ -42,7 +54,22 @@ export function BirdsForYou() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2 items-center">
-        <span className="text-sm text-slate">{radiusMiles} mi radius</span>
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") { setActiveSearch(search); setVisibleCount(PAGE_SIZE); } }}
+          placeholder="Search species..."
+          className="flex-1 min-w-32 px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest/20"
+        />
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => { setActiveSearch(search); setVisibleCount(PAGE_SIZE); }}
+        >
+          Search
+        </Button>
+        <span className="text-sm text-slate">{radiusMiles} mi</span>
         <select
           value={sort}
           onChange={(e) => { setSort(e.target.value as SortOption); setVisibleCount(PAGE_SIZE); }}
@@ -76,7 +103,9 @@ export function BirdsForYou() {
         </div>
       ) : sorted.length === 0 ? (
         <p className="text-center text-slate py-8">
-          No recommended birds nearby in the last {back} days. Try expanding your search radius!
+          {activeSearch
+            ? `No species matching "${activeSearch}" found nearby.`
+            : `No recommended birds nearby in the last ${back} days. Try expanding your search radius!`}
         </p>
       ) : (
         <div className="space-y-3">

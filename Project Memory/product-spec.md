@@ -46,8 +46,11 @@ A paginated list (20 per page, "Show more" button) of relatively rare birds rece
 - **Search radius**: Slider (1–25 mi, default 10 mi) — displayed inline with the above on tablet/desktop; wraps to a second row on mobile
 
 **Controls**:
+- **Search**: Text input + **"Search" button** — pressing the button triggers a fresh scored-birds fetch filtered by species name. Typing alone does not trigger a fetch. Clearing the field and pressing Search returns the full unfiltered list.
 - **Sort**: Score (default), Distance, Date, Alphabetical
 - **Lookback**: 1 day, 3 days, 7 days (max)
+
+All controls appear on the same row (wrapping on mobile).
 
 **Scoring**: See [Rarity Scoring](#rarity-scoring) below.
 
@@ -159,6 +162,7 @@ Used by both the logged-out and logged-in Birds for You. A species is scored by 
 |--------|--------|-------------|
 | Lifer | 1000 (logged-in only) | Species not on the user's life list — the most valuable recommendation |
 | Notable (eBird rarity) | 500 | Species flagged as rare by eBird's regional rarity system |
+| Media | 300 | The specific species has at least one photo, audio, or video submission on a nearby checklist — indicates a sighting of higher importance requiring evidence |
 | Checklist notes | 150 | Species with observer-written descriptions or notes on the checklist (indicates likely rare/confirmed sighting) |
 | Last spotted | 150 | Proportional recency bonus: +150 for observations from today, scaling down to 0 for the oldest observation in the lookback window. Rewards very fresh sightings without a hard cutoff. |
 
@@ -167,6 +171,7 @@ Signals stack — a species can score across multiple signals simultaneously. Re
 Each species entry displays one or more **reason tags**:
 - **"Lifer"** (logged-in only) — species is not on the user's life list
 - **"Rare in this region"** — species flagged as notable by eBird
+- **"Media added"** — the specific species has at least one photo, audio, or video on a nearby checklist
 - **"Checklist notes added"** — observer wrote a description or notes for this species observation
 
 ---
@@ -204,7 +209,7 @@ Each species entry displays one or more **reason tags**:
 │  [📍 My Location] [ZIP: _____ Go]       │  ← location bar (mobile: 2 rows)
 │  [══════●══════════════════] 10 mi      │  ← tablet/desktop: same row as above
 │                                         │
-│  Sort: [Score ▼]  [7d ▼]               │
+│  [Search___________] [Search] [Score ▼] [7d ▼]  │  ← wraps on mobile
 │                                         │
 │  ┌─────────────────────────────────┐    │
 │  │ Varied Thrush (Ixoreus naevius) │    │
@@ -225,6 +230,8 @@ Each species entry displays one or more **reason tags**:
 
 Tablet/desktop — location bar condenses to one row:
   [📍 My Location]  [ZIP: _____ Go]  [══●══════] 10 mi
+Tablet/desktop — controls on one row:
+  [Search_______________________] [Search] [Score ▼] [7d ▼]
 ```
 
 ### Screen: User Profile Settings
@@ -439,5 +446,5 @@ The following features are deferred to future releases:
 
 ---
 
-*Document Version: 3.2 (Beta v0.1)*
-*Last Updated: February 2026*
+*Document Version: 3.3*
+*Last Updated: April 2026*

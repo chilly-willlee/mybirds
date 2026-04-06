@@ -25,6 +25,8 @@ export function LandingBirds({ isLoggedIn }: { isLoggedIn: boolean }) {
   const [zipCode, setZipCode] = useState("");
   const [zipLoading, setZipLoading] = useState(false);
   const [zipError, setZipError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [activeSearch, setActiveSearch] = useState("");
 
   useEffect(() => {
     if (geo.lat !== null && geo.lng !== null && lat === null) {
@@ -39,7 +41,15 @@ export function LandingBirds({ isLoggedIn }: { isLoggedIn: boolean }) {
     setError(null);
     setVisibleCount(PAGE_SIZE);
 
-    fetch(`/api/birds/scored?lat=${lat}&lng=${lng}&radiusMiles=${radiusMiles}&back=${back}`)
+    const params = new URLSearchParams({
+      lat: String(lat),
+      lng: String(lng),
+      radiusMiles: String(radiusMiles),
+      back: String(back),
+    });
+    if (activeSearch) params.set("search", activeSearch);
+
+    fetch(`/api/birds/scored?${params}`)
       .then((r) => {
         if (!r.ok) throw new Error("Failed to fetch birds");
         return r.json();
@@ -47,7 +57,7 @@ export function LandingBirds({ isLoggedIn }: { isLoggedIn: boolean }) {
       .then((data) => setBirds(data))
       .catch(() => setError("Unable to load birds. Please try again."))
       .finally(() => setLoading(false));
-  }, [lat, lng, radiusMiles, back]);
+  }, [lat, lng, radiusMiles, back, activeSearch]);
 
   async function handleZipLookup() {
     if (!/^\d{5}$/.test(zipCode)) {
@@ -117,6 +127,21 @@ export function LandingBirds({ isLoggedIn }: { isLoggedIn: boolean }) {
       ) : (
         <>
           <div className="flex flex-wrap gap-2 items-center">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { setActiveSearch(search); setVisibleCount(PAGE_SIZE); } }}
+              placeholder="Search species..."
+              className="flex-1 min-w-32 px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-forest/20"
+            />
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => { setActiveSearch(search); setVisibleCount(PAGE_SIZE); }}
+            >
+              Search
+            </Button>
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value as SortOption)}
@@ -152,7 +177,9 @@ export function LandingBirds({ isLoggedIn }: { isLoggedIn: boolean }) {
             <p className="text-center text-red-600 py-8">{error}</p>
           ) : sorted.length === 0 ? (
             <p className="text-center text-slate py-8">
-              No notable birds found nearby in the last {back} days. Try expanding your search radius!
+              {activeSearch
+                ? `No species matching "${activeSearch}" found nearby.`
+                : `No notable birds found nearby in the last ${back} days. Try expanding your search radius!`}
             </p>
           ) : (
             <div className="space-y-3">
